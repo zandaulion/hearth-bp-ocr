@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "vendor": "node tools/vendor.mjs",
-    "test": "node --test web/reading.test.mjs web/crop-fallback.test.mjs"
+    "test": "node --test web/reading.test.mjs web/crop-fallback.test.mjs web/adaptive-crop.test.mjs"
   },
   "dependencies": {
     "onnxruntime-web": "1.30.0"

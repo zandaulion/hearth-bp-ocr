@@ -2,6 +2,7 @@
 # Copyright (C) 2026 zandaulion
 """Check Git's tracked publication surface without printing secret values."""
 from pathlib import Path
+import hashlib
 import re
 import subprocess
 import sys
@@ -14,6 +15,11 @@ if not paths:
 
 blocked = re.compile(r"(?:^|/)(?:initial-code|dataset|photos|samples|reports|artifacts|runs|node_modules|\.venv|\.ssh|\.aws|\.codex|\.roboflow)(?:/|$)|(?:^|/)\.env(?:\.|$)|ground_truth|\.(?:onnx|pt|pth|joblib|pkl|log|pem|key|p12|pfx|zip|gz|jpg|jpeg|png|webp|heic|mp4|mov)$", re.I)
 icons = {"prototype/web/icon-192.png", "prototype/web/icon-512.png"}
+# Exact reviewed exports only. A replacement needs a fresh provenance/metadata audit.
+models = {
+    "prototype/web/models/bp-detector.onnx": "8a7dafaed0aa9056308171d57d024343049cff4ba1a9adfc54d274c38a31fb07",
+    "prototype/web/models/bp-digits.onnx": "f41a41f9138c7c80d7e7fa1c3ed5afe93c3f5beacb3efd861ba3222b597cd732",
+}
 # Assemble markers so this checker does not match its own literal source.
 patterns = {
     "private key": re.compile("-----BEGIN " + r"(?:RSA |EC |OPENSSH )?PRIVATE KEY-----"),
@@ -26,9 +32,13 @@ patterns = {
 }
 issues = []
 for name in paths:
-    if name not in icons and blocked.search(name):
+    if name not in icons and name not in models and blocked.search(name):
         issues.append((name, "excluded artifact path"))
     payload = subprocess.check_output(["git", "show", f":{name}"], cwd=ROOT)
+    if name in models:
+        if hashlib.sha256(payload).hexdigest() != models[name]:
+            issues.append((name, "model differs from reviewed export"))
+        continue
     if name in icons:
         continue
     if b"\0" in payload:

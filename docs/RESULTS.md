@@ -1,7 +1,7 @@
 # Aggregate development results
 
 Evaluation date: 6 October 2026. These summarize the local research workflow;
-trained models and detailed per-photo records are not distributed in this repo.
+the v2 ONNX models are bundled, while detailed per-photo records remain private.
 
 | Model and dataset role | Correct complete readings | Accuracy with refusals | Candidates / eligible | Candidate precision |
 | --- | ---: | ---: | ---: | ---: |
@@ -20,6 +20,11 @@ has a 95% Wilson interval of 83.2–100%, and validation was also used for selec
 The first frozen test had only four candidates, with a 51.0–100% interval.
 Session and source correlations further weaken independent-observation assumptions.
 **The >90% precision target on new captures remains unproven.**
+
+A subsequent [adaptive crop and lighting-correction revision](ADAPTIVE_CROP.md)
+preserved these original validation/regression results and recovered additional
+development examples. Its results are reported separately because it was tuned
+after these model evaluations.
 
 Android browser inference and offline replay worked on a Galaxy A52. Warm OCR
 was approximately 0.84 seconds on repeated development samples. Live Android

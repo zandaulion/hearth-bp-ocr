@@ -25,6 +25,8 @@ __pycache__/
 *.gz
 *.cache
 *.onnx
+!prototype/web/models/bp-detector.onnx
+!prototype/web/models/bp-digits.onnx
 *.pt
 *.pth
 *.joblib

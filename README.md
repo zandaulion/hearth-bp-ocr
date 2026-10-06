@@ -6,7 +6,11 @@ The PWA performs ONNX inference locally in a browser worker and supports camera
 capture, image selection, cropping, manual corrections, and copying a verified
 reading. It does not interpret measurements medically.
 
-Original source code, documentation, and generated app icons are licensed under
+After a refusal, the current pipeline can try agreeing central crops followed
+by a crop inferred from numeric rows with uneven-lighting correction. See the
+[adaptive fallback design and development results](docs/ADAPTIVE_CROP.md).
+
+Original source code, documentation, generated app icons, and bundled model weights are licensed under
 **AGPL-3.0-only**; see [LICENSE](LICENSE). Third-party dependencies retain their
 own licenses and notices in [THIRD_PARTY.md](prototype/THIRD_PARTY.md).
 
@@ -14,11 +18,10 @@ own licenses and notices in [THIRD_PARTY.md](prototype/THIRD_PARTY.md).
 Check every value against the monitor. Detection scores are not calibrated
 probabilities. See [aggregate development results](docs/RESULTS.md).
 
-This repository is a source snapshot. The user-supplied starter code, private photos, individual readings,
-screenshots, logs, machine connection settings, downloaded datasets, and trained
-weights are excluded. The previously tested models were partly trained on
-user-provided photos and are not distributed here. The existing local prototype
-continues to use them separately.
+The tested detector and digit-recognizer ONNX weights are included (10.9 MB total).
+See the [model card](docs/MODEL_CARD.md) for provenance, checksums and limitations.
+The user-supplied starter code, private photos, individual readings, screenshots,
+logs, machine connection settings and downloaded datasets remain excluded.
 
 ## Browser setup
 
@@ -32,18 +35,15 @@ npm test
 cd ..
 ```
 
-Before OCR can run, provide compatible, appropriately licensed models at
-`prototype/web/models/bp-detector.onnx` and `bp-digits.onnx`, with matching
-`config.json`. The committed configuration is an example of the previous
-pipeline settings, not a release claim for newly trained models. Recalibrate
-new models. Models and user photos remain ignored by Git.
+The checkout includes both models and their matching `config.json`; no training
+or dataset download is needed to run OCR. Only these two reviewed ONNX exports
+are allowed in Git. Other checkpoints and user photos remain ignored.
 
 ```sh
 python prototype/serve.py
 ```
 
-Open <http://127.0.0.1:8765/>. Without the model files the interface shows a reader
-initialization error; the source checkout is not a ready-to-use model release.
+Open <http://127.0.0.1:8765/> after installing and vendoring the browser runtime.
 Camera capture needs a secure context. For Android, use HTTPS or the localhost
 tunnel described by the [phone skill](skills/lenovo-android/SKILL.md).
 After a successful complete load, the service worker caches the static app and
@@ -75,8 +75,9 @@ python prototype/calibrate.py --model prototype/web/models/bp-detector.onnx --ou
 ```
 
 Use the virtual environment's Python for all commands. The training workflow
-above uses public images only and will not recreate the private fine-tuned
-model's exact weights or metrics. Keep genuinely new test images untouched until
+above uses public images only and will not recreate the bundled fine-tuned
+models' exact weights or metrics because their private training photos are omitted.
+Keep genuinely new test images untouched until
 models and thresholds are frozen. Optional scripts that consume local personal
 ground truth need those untracked inputs; they are not required by this workflow.
 

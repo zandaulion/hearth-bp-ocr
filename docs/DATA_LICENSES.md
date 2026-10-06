@@ -29,3 +29,8 @@ from source-code and model licensing.
 
 Large datasets are usually easier to obtain from their original hosts using
 documented download instructions than to embed in normal Git history.
+
+The eight owner-provided training photos have been cleared by their owner for
+public distribution of the trained weights, not distribution of the photos.
+The bundled weights use the Roboflow source above plus those photos; the Kaggle
+download is not a training source for this release. See [model provenance](MODEL_CARD.md).

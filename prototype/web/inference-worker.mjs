@@ -3,6 +3,7 @@
 import * as ort from './vendor/ort.wasm.min.mjs';
 import {assemble,decodeOutput} from './reading.mjs';
 import {cropRegions,selectCropFallback} from './crop-fallback.mjs';
+import {rowRegion,normalizeRgba,selectAdaptiveFallback} from './adaptive-crop.mjs';
 
 ort.env.wasm.wasmPaths=new URL('./vendor/',import.meta.url).href;
 ort.env.wasm.numThreads=1;
@@ -63,6 +64,7 @@ self.onmessage=async({data})=>{
     await initialized;
     const started=performance.now();
     let result=await infer(bitmap);
+    const full=result;
     if(!result.reading){
       const replays=[];
       for(const {name,rect} of cropRegions(bitmap.width,bitmap.height)){
@@ -70,6 +72,24 @@ self.onmessage=async({data})=>{
         try{replays.push({name,rect,result:await infer(crop)});}finally{crop.close();}
       }
       result=selectCropFallback(result,replays);
+    }
+    if(!result.reading){
+      const rect=rowRegion(full.detections,bitmap.width,bitmap.height);
+      if(rect){
+        const [x,y,width,height]=rect;
+        const canvas=new OffscreenCanvas(width,height),ctx=canvas.getContext('2d',{willReadFrequently:true});
+        ctx.drawImage(bitmap,x,y,width,height,0,0,width,height);
+        const rgba=ctx.getImageData(0,0,width,height).data,replays=[];
+        for(const fraction of [.04,.05]){
+          ctx.putImageData(new ImageData(normalizeRgba(rgba,width,height,fraction),width,height),0,0);
+          replays.push({name:'normalized-'+fraction,rect,result:await infer(canvas)});
+        }
+        const selected=selectAdaptiveFallback(full,replays);
+        if(selected!==full){
+          selected.cropFallback.method='two-agreeing-row-crops-light-normalized';
+          result=selected;
+        }
+      }
     }
     self.postMessage({type:'result',id,result,elapsedMs:Math.round(performance.now()-started)});
   }catch(error){self.postMessage({type:'error',id,message:error.message});}
