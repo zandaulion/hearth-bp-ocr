@@ -1,7 +1,12 @@
 # Local BP reader prototype
 
-See the [repository README](../README.md) for setup, public-only training, browser
-use, model requirements, and tests. This source snapshot includes no trained
-weights, private samples, or detailed camera reports. The inference worker needs
-both compatible ONNX models and their matching configuration before it can read
-a photo. See [aggregate results](../docs/RESULTS.md) for the limits of the evidence.
+The prototype includes both trained ONNX models and matching configuration.
+See the [repository README](../README.md) for setup and browser use. Private
+samples, starter code and detailed camera reports remain excluded.
+
+- [Integration guide](../docs/INTEGRATION.md): reuse the worker in another application.
+- [API/model contract](../docs/API_REFERENCE.md): messages, tensors, preprocessing and results.
+- [Architecture/source map](../docs/ARCHITECTURE.md): responsibilities of every module.
+- [Development guide](../docs/DEVELOPMENT.md): training, evaluation, testing and troubleshooting.
+- [Integration examples](../examples/README.md): browser client and Python script.
+- [Results](../docs/RESULTS.md): current evidence and its limits.

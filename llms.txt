@@ -1,0 +1,19 @@
+# Hearth BP monitor OCR
+
+Experimental local OCR for upright three-row home monitor displays. Bundled
+ONNX detector and digit recognizer, browser worker, Python research reference.
+AGPL-3.0-only; retain dependency notices. More than 90% prospective precision
+has not been established. All returned values require human verification.
+
+## Start here
+
+- [AI integration handoff](docs/AI_INTEGRATION.md): context and implementation prompt.
+- [Integration guide](docs/INTEGRATION.md): browser/PWA, Python and native Android boundaries.
+- [API reference](docs/API_REFERENCE.md): worker messages, result schema, tensors and preprocessing.
+- [Examples](examples/README.md): browser client and single-pass Python script.
+- [Architecture](docs/ARCHITECTURE.md): runtime flow and source map.
+- [Development](docs/DEVELOPMENT.md): training, evaluation, release and troubleshooting.
+- [Model card](docs/MODEL_CARD.md): weights, provenance and limitations.
+- [Documentation index](docs/README.md): complete documentation map.
+- [License](LICENSE): AGPL-3.0-only project license.
+- [Third-party notices](prototype/THIRD_PARTY.md): dependencies and upstream attribution.

@@ -1,6 +1,11 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 # Copyright (C) 2026 zandaulion
-"""Identical ONNX preprocessing/output format for Python and browser inference."""
+"""Single-pass Python ONNX reference; see docs/API_REFERENCE.md.
+
+Input is BGR uint8. Browser resizing/grayscale rounding and fallback orchestration
+can produce different results. Read thresholds from the released config rather
+than relying on the research defaults below.
+"""
 from pathlib import Path
 import cv2
 import numpy as np
@@ -43,6 +48,7 @@ def decode_output(output, transform, min_score=.25):
 
 
 class DigitRecognizer:
+    """Refine detected digit crops; class 10 is background, not a numeric row."""
     def __init__(self,model,threads=2,min_score=.5):
         options=ort.SessionOptions();options.intra_op_num_threads=threads;options.inter_op_num_threads=1
         self.session=ort.InferenceSession(str(model),sess_options=options,providers=["CPUExecutionProvider"])
@@ -69,6 +75,7 @@ class DigitRecognizer:
 
 
 class Detector:
+    """Reusable CPU sessions for one image pass, without crop fallback stages."""
     def __init__(self, model, threads=4,digit_model=None):
         options = ort.SessionOptions()
         options.intra_op_num_threads = threads

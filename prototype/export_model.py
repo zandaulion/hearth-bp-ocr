@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 # Copyright (C) 2026 zandaulion
-"""Export a selected checkpoint and verify ONNX parity on validation images."""
+"""Export a detector and reset baseline config; run verify_export.py separately."""
 import argparse
 import json
 import os

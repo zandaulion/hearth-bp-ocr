@@ -1,5 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright (C) 2026 zandaulion
+// Full browser pipeline and message contract: docs/API_REFERENCE.md.
+// Owns/closes transferred bitmaps; one read at a time. Config fallback blocks
+// describe the implementation; crop geometry/fractions are currently code constants.
 import * as ort from './vendor/ort.wasm.min.mjs';
 import {assemble,decodeOutput} from './reading.mjs';
 import {cropRegions,selectCropFallback} from './crop-fallback.mjs';

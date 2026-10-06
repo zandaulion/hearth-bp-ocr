@@ -25,6 +25,11 @@ logs, machine connection settings and downloaded datasets remain excluded.
 
 ## Browser setup
 
+For reuse in another project, start with the [integration guide](docs/INTEGRATION.md)
+and [runnable examples](examples/README.md). Give another coding agent the
+[AI integration handoff](docs/AI_INTEGRATION.md). The [documentation index](docs/README.md)
+links the architecture, API/model contract, training and troubleshooting guides.
+
 Use Python 3.12 and a current Node.js version. Install the browser runtime:
 
 ```sh
@@ -71,10 +76,13 @@ python prototype/bootstrap.py
 python prototype/train_detector.py --epochs 40 --name detector_v1
 python prototype/train_digits.py
 python prototype/export_model.py prototype/runs/detector_v1/weights/best.pt
-python prototype/calibrate.py --model prototype/web/models/bp-detector.onnx --output prototype/reports/calibration.json --version public-v1 --freeze
+python prototype/calibrate.py --model prototype/web/models/bp-detector.onnx --output prototype/reports/calibration.json --version public-v1
 ```
 
 Use the virtual environment's Python for all commands. The training workflow
+overwrites local exported models and generates a calibration report. Follow the
+[release procedure and freeze-script caveat](docs/DEVELOPMENT.md) before activating
+new thresholds or publishing another model version. The recipe
 above uses public images only and will not recreate the bundled fine-tuned
 models' exact weights or metrics because their private training photos are omitted.
 Keep genuinely new test images untouched until

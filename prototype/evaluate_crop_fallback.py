@@ -1,9 +1,10 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 # Copyright (C) 2026 zandaulion
-"""Development experiment: two agreeing central crops after a portrait refusal.
+"""Historical development experiment: two agreeing crops after a portrait refusal.
 
 No model/threshold changes. Portrait canvases are synthetic transformations of
-existing images, not new independent evidence. Production remains unchanged.
+existing images, not new independent evidence. This script does not implement
+the later adaptive2 browser pipeline. See docs/DEVELOPMENT.md for required inputs.
 """
 import json
 import math
