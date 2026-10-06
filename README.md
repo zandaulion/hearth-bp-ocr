@@ -1,0 +1,104 @@
+# Hearth BP monitor OCR
+
+An experimental reader for systolic pressure (SYS), diastolic pressure (DIA),
+and pulse on common upright, three-row blood-pressure monitor displays.
+The PWA performs ONNX inference locally in a browser worker and supports camera
+capture, image selection, cropping, manual corrections, and copying a verified
+reading. It does not interpret measurements medically.
+
+Original source code, documentation, and generated app icons are licensed under
+**AGPL-3.0-only**; see [LICENSE](LICENSE). Third-party dependencies retain their
+own licenses and notices in [THIRD_PARTY.md](prototype/THIRD_PARTY.md).
+
+**More than 90% precision on new real-world captures has not been established.**
+Check every value against the monitor. Detection scores are not calibrated
+probabilities. See [aggregate development results](docs/RESULTS.md).
+
+This repository is a source snapshot. The user-supplied starter code, private photos, individual readings,
+screenshots, logs, machine connection settings, downloaded datasets, and trained
+weights are excluded. The previously tested models were partly trained on
+user-provided photos and are not distributed here. The existing local prototype
+continues to use them separately.
+
+## Browser setup
+
+Use Python 3.12 and a current Node.js version. Install the browser runtime:
+
+```sh
+cd prototype
+npm ci
+npm run vendor
+npm test
+cd ..
+```
+
+Before OCR can run, provide compatible, appropriately licensed models at
+`prototype/web/models/bp-detector.onnx` and `bp-digits.onnx`, with matching
+`config.json`. The committed configuration is an example of the previous
+pipeline settings, not a release claim for newly trained models. Recalibrate
+new models. Models and user photos remain ignored by Git.
+
+```sh
+python prototype/serve.py
+```
+
+Open <http://127.0.0.1:8765/>. Without the model files the interface shows a reader
+initialization error; the source checkout is not a ready-to-use model release.
+Camera capture needs a secure context. For Android, use HTTPS or the localhost
+tunnel described by the [phone skill](skills/lenovo-android/SKILL.md).
+After a successful complete load, the service worker caches the static app and
+models. Normal user photos stay in memory and are not uploaded or persisted.
+The separate development harness records metrics when explicitly run.
+
+## Reproduce public-data training
+
+Obtain the [Roboflow version 1 dataset](https://universe.roboflow.com/final-project-cwtfb/blood-pressure-monitor-display/dataset/1)
+under its CC BY 4.0 terms. Download YOLOv8 format to
+`dataset/roboflow_bp_display/`, preserving its license and class metadata.
+`download_roboflow_dataset.py` accepts `ROBOFLOW_API_KEY` through the environment;
+never commit API keys or downloaded authentication files.
+
+Create a virtual environment. In PowerShell use `.venv/Scripts/python.exe` after
+creation; on Linux/macOS activate `.venv/bin/activate`.
+
+```sh
+python -m venv .venv
+python -m pip install torch==2.14.1 torchvision==0.29.1 --index-url https://download.pytorch.org/whl/cpu
+python -m pip install -r prototype/requirements.txt
+python evaluation/dataset_tools.py
+python prototype/prepare_data.py
+python prototype/bootstrap.py
+python prototype/train_detector.py --epochs 40 --name detector_v1
+python prototype/train_digits.py
+python prototype/export_model.py prototype/runs/detector_v1/weights/best.pt
+python prototype/calibrate.py --model prototype/web/models/bp-detector.onnx --output prototype/reports/calibration.json --version public-v1 --freeze
+```
+
+Use the virtual environment's Python for all commands. The training workflow
+above uses public images only and will not recreate the private fine-tuned
+model's exact weights or metrics. Keep genuinely new test images untouched until
+models and thresholds are frozen. Optional scripts that consume local personal
+ground truth need those untracked inputs; they are not required by this workflow.
+
+## Tests and Android helpers
+
+```sh
+python prototype/test_reading.py
+python evaluation/test_metrics.py
+python tools/check_public_tree.py
+```
+
+The Python checks need the listed Python dependencies; JavaScript reading and
+crop-fallback tests need Node.js only. Tests use synthetic readings.
+The [Lenovo Android skill](skills/lenovo-android/SKILL.md) provides fresh ADB
+discovery, named phone selection, screenshots, UI snapshots, and SSH tunnels.
+Configure your own trusted SSH connection; no host address or credentials are
+included. Its helper needs Python 3 and OpenSSH locally, and ADB on the SSH host.
+
+For the optional Android timing harness, provide consented local images and
+`prototype/web/samples/test-manifest.json`, an array of objects with `file`,
+`expected` (`sys`, `dia`, `pulse`), and `role`. Those inputs are ignored by Git.
+Reports are generated locally and remain ignored too.
+
+See [data licensing](docs/DATA_LICENSES.md), [publication policy](docs/PUBLICATION.md),
+and [third-party notices](prototype/THIRD_PARTY.md).

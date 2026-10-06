@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#113d38"><meta name="description" content="Read blood pressure monitor displays locally on your device.">
+  <title>Hearth · BP reader</title>
+  <link rel="manifest" href="./manifest.webmanifest"><link rel="icon" href="./icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <main>
+    <header><a class="brand" href="./" aria-label="Hearth home"><img src="./icon.svg" alt="">Hearth<span>BP reader</span></a><span class="privacy"><span class="dot"></span>On your device</span></header>
+    <section class="intro"><span class="eyebrow">LOCAL PROTOTYPE</span><h1>A photo.<br>Three readings.</h1><p>Capture your monitor’s display to read systolic pressure, diastolic pressure and pulse. Your photo stays on this device.</p></section>
+    <div class="workspace">
+      <section class="capture card" aria-label="Capture a monitor photo">
+        <div class="section-head"><h2>1. Capture the display</h2><span id="runtime" role="status">Preparing reader…</span></div>
+        <div class="stage" id="stage">
+          <div id="empty"><svg viewBox="0 0 120 130" aria-hidden="true"><rect x="20" y="8" width="80" height="112" rx="16"/><rect class="lcd" x="30" y="24" width="60" height="64" rx="5"/><text x="40" y="48">120</text><text x="49" y="66">80</text><text x="49" y="81">70</text><circle cx="60" cy="103" r="7"/></svg><p>Keep the display upright,<br>large in the frame and free of glare.</p></div>
+          <canvas id="photo" hidden aria-label="Monitor photo and detected number rows"></canvas>
+          <video id="camera" autoplay playsinline muted hidden></video>
+          <span id="photo-label" hidden>Selected photo</span>
+        </div>
+        <div class="actions"><button class="primary" id="open-camera" disabled>Use camera</button><button class="secondary" id="choose-photo" disabled>Choose photo</button><input id="file" type="file" accept="image/*" hidden></div>
+        <div class="camera-actions" id="camera-actions" hidden><button class="primary" id="take-photo">Capture</button><button class="secondary" id="close-camera">Close camera</button></div>
+        <div class="edit-actions" id="edit-actions" hidden><button class="text-button" id="crop">Crop display</button><button class="text-button" id="use-crop" hidden>Use crop</button><button class="text-button" id="cancel-crop" hidden>Cancel crop</button><button class="text-button" id="read-again">Read again</button><button class="text-button" id="restore-photo" hidden>Restore photo</button></div>
+        <p class="hint" id="capture-hint">Three-row home monitors work best. You can crop a photo to make the display easier to read.</p>
+      </section>
+      <section class="results card" aria-label="Recognized blood pressure values">
+        <div class="section-head"><h2>2. Check the readings</h2><span class="pill" id="result-status">Waiting for photo</span></div>
+        <div class="numbers">
+          <label><span>SYS <small>Systolic</small></span><div><input id="sys" type="number" min="0" max="999" step="1" placeholder="—" disabled><span>mmHg</span></div></label>
+          <label><span>DIA <small>Diastolic</small></span><div><input id="dia" type="number" min="0" max="999" step="1" placeholder="—" disabled><span>mmHg</span></div></label>
+          <label><span>PULSE <small>Heart rate</small></span><div><input id="pulse" type="number" min="0" max="999" step="1" placeholder="—" disabled><span>bpm</span></div></label>
+        </div>
+        <div class="notice" id="notice" role="status">The reader is experimental. Check all three values against the monitor before using them.</div>
+        <label class="verify"><input id="verified" type="checkbox" disabled><span>I checked all three values on the monitor.</span></label>
+        <button id="copy" class="primary full" disabled>Copy verified reading</button>
+        <p class="hint" id="result-detail">Your readings are not saved or sent anywhere.</p>
+      </section>
+    </div>
+    <footer>Built for careful capture.<span id="offline-status">Initial setup needs the local app files.</span></footer>
+  </main>
+  <script type="module" src="./app.mjs"></script>
+</body>
+</html>

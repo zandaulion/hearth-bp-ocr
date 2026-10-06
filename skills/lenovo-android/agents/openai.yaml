@@ -1,0 +1,4 @@
+interface:
+  display_name: "Lenovo Android Phones"
+  short_description: "Use the A52 or Fold4 through Lenovo's ADB connection"
+  default_prompt: "Use $lenovo-android to discover Lenovo's phones and test my app on the selected device."

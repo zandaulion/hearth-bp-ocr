@@ -1,0 +1,11 @@
+# CPU training, ONNX export and benchmark environment used for this prototype.
+# Install torch/torchvision CPU wheels first; see README.md.
+numpy==2.3.5
+Pillow==12.3.0
+opencv-python==4.14.0.94
+torch==2.14.1
+torchvision==0.29.1
+ultralytics==8.4.173
+onnx==1.23.2
+onnxruntime==1.30.0
+PyYAML==6.0.3
