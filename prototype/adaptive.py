@@ -4,6 +4,7 @@
 import math
 import cv2
 import numpy as np
+from prototype.reading import is_plausible_reading
 
 
 def row_region(detections,width,height):
@@ -33,7 +34,7 @@ def normalize_light(image,fraction):
 
 
 def adaptive_read(detector,image,full,min_score=.2,accept_score=.25):
-    if full['reading'] is not None:return full,[]
+    if is_plausible_reading(full['reading']):return full,[]
     h,w=image.shape[:2];rect=row_region(full['detections'],w,h)
     if rect is None:return full,[]
     x,y,cw,ch=rect;crop=image[y:y+ch,x:x+cw];views=[]
@@ -42,7 +43,7 @@ def adaptive_read(detector,image,full,min_score=.2,accept_score=.25):
         views.append({'fraction':fraction,'rect':rect,'result':result})
     def plausible(result):
         r=result['reading']
-        return r is not None and result['status'] in ('candidate','review') and all(isinstance(v,int) for v in r.values()) and 50<=r['sys']<=280 and 25<=r['dia']<=180 and 20<=r['pulse']<=250 and r['sys']>r['dia']
+        return result['status'] in ('candidate','review') and is_plausible_reading(r)
     if all(plausible(v['result']) for v in views) and views[0]['result']['reading']==views[1]['result']['reading']:
         def move(d):return {**d,'box':[v+(x if i%2==0 else y) for i,v in enumerate(d['box'])]}
         selected=views[0]['result']

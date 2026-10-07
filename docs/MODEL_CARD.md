@@ -1,10 +1,10 @@
-# Hearth v2 models with adaptive2 preprocessing
+# Hearth v2 models with adaptive3 postprocessing
 
-Released 6 October 2026. Both ONNX exports are included for local browser
+Released 7 October 2026. Both ONNX exports are included for local browser
 inference under **AGPL-3.0-only**; see [LICENSE](../LICENSE). No training is
 required to use them. Their bytes match the models used in the reported v2
-evaluations and Fold4 tests. The adaptive2 changes affect preprocessing and
-reading selection, not learned weights.
+evaluations and Fold4 tests. The adaptive2 preprocessing and adaptive3 row
+association/fallback changes do not alter learned weights.
 
 ## Files and interfaces
 
@@ -63,12 +63,14 @@ The intended scope is upright home-monitor displays with three SYS/DIA/pulse
 rows. Check every value against the monitor. The reader does not interpret
 measurements, and detector scores are not correctness probabilities.
 
-See [aggregate results](RESULTS.md) and [adaptive2 results](ADAPTIVE_CROP.md).
+See [aggregate results](RESULTS.md) and [adaptive results](ADAPTIVE_CROP.md).
 Public validation was used for selection; the earlier reserved test was consumed
 by v1 and later became regression data. A fresh Fold4 capture on adaptive2 was
 correct in 1.16 seconds, confirmed by the user, after four refusals across earlier
 browser/pipeline revisions. One success on a known monitor is not a representative
-benchmark. **More than 90% prospective precision remains unproven.**
+benchmark. Adaptive3 adds later regression checks described in the adaptive
+notes; they were used for selection and are not a new benchmark.
+**More than 90% prospective precision remains unproven.**
 
 Before publication, both ONNX files passed structural validation. Protobuf string
 fields were inspected for personal paths and identifiers; neither file references

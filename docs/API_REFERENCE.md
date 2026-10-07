@@ -123,15 +123,20 @@ Refined detections retain the original box and original class in `detector_class
 
 ## Assembly and fallbacks
 
-Assembly considers the eight highest-score row boxes and groups digit centers
-within each row with 3% horizontal / 8% vertical slack. A row must have exactly
-two or three digits and no leading zero. It searches all three-row combinations
-for one unambiguous vertical stack, rejects overlapping rows, reused digits,
+Assembly considers the eight highest-score row boxes. Digit centers get 8%
+vertical slack; horizontally, a digit box may touch the row or extend up to 20%
+of row height beyond an edge. Basing this allowance on row height recovers a
+narrow edge digit from a prematurely ended row proposal without sweeping a
+distant digit into a wide row. A row must have exactly two or three digits and
+no leading zero. Assembly searches all three-row combinations for one
+unambiguous vertical stack and rejects overlapping rows, reused digits,
 side-by-side columns and strongly mismatched SYS/DIA heights.
 
 Consistency checks require SYS 50–280, DIA 25–180, pulse 20–250 and SYS > DIA.
 These are transcription filters, not medical interpretations. Failing them
-changes a complete full-pass result to `review`, not `retake`.
+changes a complete full-pass result to `review` and permits fallback attempts;
+it does not invent or alter a digit. The original result remains unless both
+fallback views agree on the same plausible replacement.
 
 The fixed portrait views apply at height ≥ 1.2 × width. Their normalized
 `[x,y,width,height]` are `[.15,.25,.7,.6]` and `[.25,.32,.6,.5]`, rounded to pixels.

@@ -37,6 +37,11 @@ test('agreement with a low-confidence view returns review, never candidate',()=>
   const result=selectAdaptiveFallback(full,views);
   assert.equal(result.status,'review');assert.equal(result.score,.21);assert.deepEqual(result.reading,r.reading);
 });
+test('agreeing plausible enhanced views replace an implausible full reading',()=>{
+  const full={reading:{sys:12,dia:80,pulse:60}},r={reading:{sys:120,dia:80,pulse:60},status:'candidate',score:.8,rows:[],detections:[]};
+  const views=[{name:'a',rect:[20,30,100,200],result:r},{name:'b',rect:[20,30,100,200],result:r}];
+  assert.deepEqual(selectAdaptiveFallback(full,views).reading,r.reading);
+});
 test('agreeing implausible readings and incomplete views remain refusals',()=>{
   const full={reading:null},r={reading:{sys:720,dia:80,pulse:60},status:'review',score:.8,rows:[],detections:[]};
   const views=[{name:'a',rect:[0,0,100,200],result:r},{name:'b',rect:[0,0,100,200],result:r}];

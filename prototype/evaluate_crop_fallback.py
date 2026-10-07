@@ -4,7 +4,7 @@
 
 No model/threshold changes. Portrait canvases are synthetic transformations of
 existing images, not new independent evidence. This script does not implement
-the later adaptive2 browser pipeline. See docs/DEVELOPMENT.md for required inputs.
+the later adaptive3 browser pipeline. See docs/DEVELOPMENT.md for required inputs.
 """
 import json
 import math

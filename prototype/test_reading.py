@@ -10,7 +10,7 @@ import numpy as np
 
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT))
-from prototype.reading import assemble,nms
+from prototype.reading import assemble,is_plausible_reading,nms
 from prototype.detector import decode_output,letterbox
 
 
@@ -53,6 +53,22 @@ class ReadingTests(unittest.TestCase):
         output=subprocess.run(["node","--input-type=module","-e",script],input=json.dumps(fixtures),text=True,capture_output=True,cwd=ROOT / "prototype",check=True)
         expected=[{k:assemble(f)[k] for k in ("status","reading")} for f in fixtures]
         self.assertEqual(json.loads(output.stdout),expected)
+
+    def test_truncated_row_keeps_a_nearby_edge_digit(self):
+        # Synthetic values; not sourced from a real reading.
+        found=detections((123,78,64))
+        next(d for d in found if d["class"]=="row")["box"][2]=114
+        self.assertEqual(assemble(found)["reading"],{"sys":123,"dia":78,"pulse":64})
+
+    def test_edge_recovery_does_not_sweep_a_distant_digit(self):
+        found=detections((120,90,70));row=[d for d in found if d["class"]=="row"][1]
+        found.append({"class":"1","box":[row["box"][2]+10,90,row["box"][2]+26,120],"score":.8})
+        self.assertEqual(assemble(found)["reading"],{"sys":120,"dia":90,"pulse":70})
+
+    def test_shared_plausibility_rule(self):
+        self.assertTrue(is_plausible_reading({"sys":120,"dia":80,"pulse":70}))
+        self.assertFalse(is_plausible_reading({"sys":12,"dia":80,"pulse":70}))
+        self.assertFalse(is_plausible_reading(None))
 
 
 if __name__=="__main__":unittest.main()

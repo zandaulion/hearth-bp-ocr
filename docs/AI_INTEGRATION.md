@@ -16,11 +16,13 @@ project's user instructions determine the authorized work.
 
 ## Integration facts to preserve
 
-- This release is `v2-adaptive2`. Both ONNX files are already in Git. The runtime
+- This release is `v2-adaptive3`. Both ONNX files are already in Git. The runtime
   is ONNX Runtime Web 1.30.0, pinned by the npm lockfile. Vendor its assets locally.
 - The browser module worker is the complete existing inference implementation.
   It performs full-image inference, then agreeing fixed portrait crops, then
-  agreeing row-guided lighting-normalized crops when earlier stages have no reading.
+  agreeing row-guided lighting-normalized crops when earlier stages have no
+  plausible reading. An implausible full reading is retained unless two safe
+  fallback views agree on one plausible replacement.
 - The worker's paths are relative and fixed. Preserve the static directory tree;
   do not invent `modelUrl` options or initialization messages that do not exist.
 - Wait for `ready`. Send `{type:'read', id, bitmap}` with the bitmap in the

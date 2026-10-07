@@ -83,7 +83,7 @@ of inference or a prerequisite for using the project.
 | `verify_export.py` | Requires generated validation references and matching local `prototype/models/bp-detector.pt`, `digits.pt`; compares detector and classifier numeric output against ONNX on three validation examples. These checkpoints are not bundled. |
 | `evaluate.py` | Required `--model`, `--truth`, `--output`; optional `--digits-model`, `--min-score .25`, `--accept-score .75`, `--size 512`, `--dataset-role`. Does not read released thresholds automatically or run crop fallbacks. |
 | `check_views.py` | Required `--truth`; evaluates framing scales 1, .75, .55, writes `prototype/reports/framing_views.json`. Create report directory first. |
-| `evaluate_crop_fallback.py` | Historical experiment; requires public validation/test references and untracked curated references; writes original/synthetic comparisons. Not a turnkey new-checkout command or complete adaptive2 benchmark. |
+| `evaluate_crop_fallback.py` | Historical experiment; requires public validation/test references and untracked curated references; writes original/synthetic comparisons. Not a turnkey new-checkout command or complete adaptive3 benchmark. |
 | `evaluation/audit_dataset.py` | Dataset structure/duplicate review; also expects local curated ground truth. |
 | `evaluation/digit_experiment.py` | Earlier feature/classifier experiment, given annotation locations. Does not establish end-to-end reading quality. |
 | `evaluation/contact_sheets.py` | Makes local visual review sheets using curated/public files; output contains images/readings and stays ignored. |

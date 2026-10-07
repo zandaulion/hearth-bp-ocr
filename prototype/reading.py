@@ -8,6 +8,12 @@ CLASS_NAMES = ("0", "1", "row", "2", "3", "4", "5", "6", "7", "8", "9")
 FIELDS = ("sys", "dia", "pulse")
 
 
+def is_plausible_reading(reading):
+    return (reading is not None and all(isinstance(reading.get(k), int) for k in FIELDS)
+            and 50 <= reading["sys"] <= 280 and 25 <= reading["dia"] <= 180
+            and 20 <= reading["pulse"] <= 250 and reading["sys"] > reading["dia"])
+
+
 def iou(a, b):
     x1, y1 = max(a[0], b[0]), max(a[1], b[1])
     x2, y2 = min(a[2], b[2]), min(a[3], b[3])
@@ -44,8 +50,10 @@ def assemble(detections, min_score=.25, accept_score=.75):
     candidates = []
     for row in rows:
         x1,y1,x2,y2 = row["box"]
-        w,h = x2-x1,y2-y1
-        group = [d for d in digits if x1-.03*w <= (d["box"][0]+d["box"][2])/2 <= x2+.03*w and y1-.08*h <= (d["box"][1]+d["box"][3])/2 <= y2+.08*h]
+        h = y2-y1
+        group = [d for d in digits
+                 if d["box"][2] >= x1-.2*h and d["box"][0] <= x2+.2*h
+                 and y1-.08*h <= (d["box"][1]+d["box"][3])/2 <= y2+.08*h]
         group.sort(key=lambda d: (d["box"][0]+d["box"][2])/2)
         if len(group) not in (2,3) or any(d["class"] not in tuple(str(n) for n in range(10)) for d in group):
             continue
@@ -85,7 +93,7 @@ def assemble(detections, min_score=.25, accept_score=.75):
     reading = dict(zip(FIELDS,[r["value"] for r in stack]))
     score = min(r["score"] for r in stack)
     reasons = []
-    if not (50 <= reading["sys"] <= 280 and 25 <= reading["dia"] <= 180 and 20 <= reading["pulse"] <= 250 and reading["sys"] > reading["dia"]):
+    if not is_plausible_reading(reading):
         reasons.append("Values failed consistency checks; verify every displayed number")
     if score < accept_score:
         reasons.append("At least one detected row or digit has low confidence")

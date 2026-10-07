@@ -22,6 +22,10 @@ test('existing full-frame reading is preserved',()=>{
   const existing={...full,reading:{sys:120,dia:80,pulse:70}};
   assert.equal(selectCropFallback(existing,[replay(),replay()]),existing);
 });
+test('two agreeing candidates replace an implausible full-frame reading',()=>{
+  const invalid={...full,status:'review',reading:{sys:12,dia:82,pulse:72}};
+  assert.deepEqual(selectCropFallback(invalid,[replay(),replay()]).reading,{sys:122,dia:82,pulse:72});
+});
 test('agreeing fallback moves row and digit overlays into source coordinates',()=>{
   const a=replay(),b=replay();b.result.score=.7;
   const selected=selectCropFallback(full,[a,b]);

@@ -26,6 +26,10 @@ preserved these original validation/regression results and recovered additional
 development examples. Its results are reported separately because it was tuned
 after these model evaluations.
 
+The later adaptive3 row-association change was selected through local regression
+testing. It has not rerun the omitted aggregate corpora in this fresh public
+checkout, so the table above must not be presented as adaptive3 validation.
+
 Android browser inference and offline replay worked on a Galaxy A52. Warm OCR
 was approximately 0.84 seconds on repeated development samples. Live Android
 tests and a conservative portrait crop fallback demonstrated feasibility but

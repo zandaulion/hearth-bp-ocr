@@ -6,8 +6,9 @@ The PWA performs ONNX inference locally in a browser worker and supports camera
 capture, image selection, cropping, manual corrections, and copying a verified
 reading. It does not interpret measurements medically.
 
-After a refusal, the current pipeline can try agreeing central crops followed
-by a crop inferred from numeric rows with uneven-lighting correction. See the
+After a refusal or an assembled reading that fails consistency checks, the
+current pipeline can try agreeing central crops followed by a crop inferred
+from numeric rows with uneven-lighting correction. See the
 [adaptive fallback design and development results](docs/ADAPTIVE_CROP.md).
 
 Original source code, documentation, generated app icons, and bundled model weights are licensed under

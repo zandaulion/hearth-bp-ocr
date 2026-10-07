@@ -2,7 +2,9 @@
 // Copyright (C) 2026 zandaulion
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {assemble,decodeOutput,nms} from './reading.mjs';
+import {assemble,decodeOutput,isPlausibleReading,nms} from './reading.mjs';
+
+// All values in this file are synthetic and are not sourced from a real reading.
 
 function stack(values=[120,80,70],score=.9){
   return values.flatMap((value,index)=>{
@@ -39,4 +41,22 @@ test('a contained partial-stroke box cannot add a duplicate digit',()=>{
   const detections=stack(),d=detections.find(d=>d.class==='2');
   detections.push({...d,class:'1',score:.4,box:[d.box[0]+1,d.box[1]+1,d.box[0]+5,d.box[1]+12]});
   assert.equal(assemble(detections).reading.sys,120);
+});
+test('a narrow edge digit can extend beyond a truncated row proposal',()=>{
+  const detections=stack([123,78,64]);
+  const row=detections.find(d=>d.class==='row');
+  row.box[2]=114;
+  const result=assemble(detections);
+  assert.equal(result.status,'candidate');assert.deepEqual(result.reading,{sys:123,dia:78,pulse:64});
+});
+test('edge recovery is bounded by row height, not a broad row-width sweep',()=>{
+  const detections=stack([120,90,70]);
+  const row=detections.filter(d=>d.class==='row')[1],y=90;
+  detections.push({class:'1',box:[row.box[2]+10,y,row.box[2]+26,y+30],score:.8});
+  assert.deepEqual(assemble(detections).reading,{sys:120,dia:90,pulse:70});
+});
+test('plausibility is shared by assembly and fallback selection',()=>{
+  assert.equal(isPlausibleReading({sys:120,dia:80,pulse:70}),true);
+  assert.equal(isPlausibleReading({sys:12,dia:80,pulse:70}),false);
+  assert.equal(isPlausibleReading(null),false);
 });

@@ -1,9 +1,10 @@
 # Adaptive crop and lighting correction
 
-The reader can refuse a complete display when it sits outside the fixed central
-crops or when uneven illumination hides digits. After the existing pipeline
-returns no reading, the worker now proposes a crop from two or three detected
-numeric rows, leaving space below the upper rows for the pulse reading.
+The reader can refuse or assemble an implausible reading when a row proposal
+ends inside a narrow edge digit, sits outside the fixed central crops, or uneven
+illumination hides digits. After the existing pipeline returns no plausible
+reading, the worker proposes a crop from two or three detected numeric rows,
+leaving space below the upper rows for the pulse reading.
 
 Two versions of the crop divide grayscale intensities by a locally smoothed
 background. Each background uses three replicated-border box blurs, with radii
@@ -13,8 +14,9 @@ and agree on all three fields. Otherwise the original refusal remains.
 Candidate output requires both views to meet the existing confidence threshold.
 If either view is low-confidence, the output remains **Please review** and is
 excluded from accepted-reading precision. No confidence threshold is lowered.
-Overlay coordinates are translated back to the source photo. Existing complete
-readings and model weights are unchanged.
+Overlay coordinates are translated back to the source photo. Existing plausible
+readings and model weights are unchanged. An implausible complete reading can be
+replaced only under the same two-view agreement rule used for refusals.
 
 The geometry and normalization parameters were tuned using two consented local
 development photos. Those photos and their readings are excluded from this repository.
@@ -53,10 +55,23 @@ monitor. The earlier four refusals occurred across previous pipeline/browser
 revisions and remain recorded locally. These observations do not establish the
 greater-than-90% prospective precision target.
 
-Twenty JavaScript checks and eleven Python checks pass. A synthetic grayscale
-fixture produced identical normalization bytes in the Python/OpenCV reference
-and JavaScript implementation. Browser resizing can still change detections at
-pixel boundaries; final validation must exercise the browser pipeline.
+Twenty-five JavaScript and fourteen Python checks cover assembly, fallback and
+metrics behavior. The JavaScript suite and a dependency-free Python assembly
+replay pass in a fresh checkout; the complete Python suite requires the pinned
+inference dependencies. A synthetic grayscale fixture previously produced
+identical normalization bytes in the Python/OpenCV reference and JavaScript
+implementation. Browser resizing can still change detections at pixel
+boundaries; final validation must exercise the browser pipeline.
+
+## Adaptive3 edge-row revision
+
+Additional local regression testing exposed implausible SYS assemblies caused
+by a row proposal ending before a narrow edge digit. The
+adaptive3 postprocessor associates a digit whose box edge is within 20% of row
+height, and permits agreeing fallbacks after an implausible full-frame result.
+Local browser replays exercised both recovery and control behavior. These checks
+were used to select the change and are not independent evidence; the earlier
+public and regression aggregate tables predate adaptive3.
 
 ## Android compatibility observation
 

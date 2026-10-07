@@ -7,7 +7,7 @@ flowchart TD
   A[Camera frame or selected image] --> B[Orient and limit longest edge to 1920 px in app]
   B --> C[Transfer ImageBitmap to module worker]
   C --> D[Full-image detector and digit recognizer]
-  D --> E{Complete reading?}
+  D --> E{Plausible complete reading?}
   E -- yes --> J[Return candidate or review]
   E -- no --> F[Two fixed crops for portrait images]
   F --> G{Both candidates agree?}
@@ -23,9 +23,11 @@ flowchart TD
 The worker holds two ONNX Runtime sessions for its lifetime. Every inference
 pass letterboxes the source to 512 square pixels, detects rows and digit boxes,
 refines digit identities using DigitNet, then assembles one unambiguous vertical
-stack. A reading from an earlier pass is preserved, even if its status is
-`review`. Fallbacks only run when `reading` is null. At most five detector passes
-are attempted: original, two central crops and two normalized row crops.
+stack. A plausible reading from an earlier pass is preserved, including a
+low-confidence `review`. A reading that fails consistency checks can be replaced
+only when both transformed fallback views agree on one plausible triplet. At
+most five detector passes are attempted: original, two central crops and two
+normalized row crops.
 
 The field labels are inferred from top-to-bottom position, not from recognizing
 the words SYS/DIA/PULSE. The models do not measure blood pressure. They transcribe
@@ -80,7 +82,7 @@ and predicted readings; do not confuse its behavior with the normal app.
 | `prototype/calibrate.py` | Validation threshold search and optional release/config freeze; see caveat in development guide. |
 | `prototype/verify_export.py` | Compares local PyTorch checkpoints and ONNX outputs on validation inputs. |
 | `prototype/evaluate.py` | Single-pass model evaluation, per-image records and aggregate metrics. |
-| `prototype/evaluate_crop_fallback.py` | Historical two-central-crop experiment; not the full adaptive2 evaluator. |
+| `prototype/evaluate_crop_fallback.py` | Historical two-central-crop experiment; not the full adaptive3 evaluator. |
 | `prototype/check_views.py` | Development experiment with image scale/framing changes. |
 | `prototype/test_reading.py` | Synthetic Python assembly tests. |
 | `prototype/android_browser.mjs` | Development Chrome DevTools client: camera, capture, status and diagnostic replays. |

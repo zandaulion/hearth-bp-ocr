@@ -21,7 +21,7 @@ a medically validated measurement system.
 Runnable integration examples live in [examples](../examples/README.md).
 Paths in these documents are relative to the repository root unless stated
 otherwise. Commands assume the repository root as the working directory.
-The interface described here is the current `v2-adaptive2` implementation;
+The interface described here is the current `v2-adaptive3` implementation;
 there is no published npm package, Python package or stable versioned SDK.
 
 The fastest route for another AI agent is to read `AI_INTEGRATION.md`, then
