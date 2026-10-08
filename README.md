@@ -115,7 +115,9 @@ Reports are generated locally and remain ignored too.
 The ignored external-v2 regression suite, when present locally, runs with
 `python prototype/evaluate_external_v2.py`. See its complete
 [construction, leakage audit and results](docs/EXTERNAL_TEST_V2.md). These cases
-are permanently excluded from training and calibration.
+are permanently excluded from training and calibration. The same consumed set
+was also used for a documented
+[comparison with BP Digitizer's Gemini model](docs/GEMINI_COMPARISON.md).
 
 See [data licensing](docs/DATA_LICENSES.md), [publication policy](docs/PUBLICATION.md),
 and [third-party notices](prototype/THIRD_PARTY.md).
