@@ -186,6 +186,43 @@ This is good behavior, but 25 examples cannot cover every misleading screen,
 sign, calculator, medical device or unusual photograph. A conventional 95%
 interval for the refusal rate is approximately 87% to 100%.
 
+## How did it compare with BP Digitizer's cloud model?
+
+For comparison, the same 125 public test images were sent once to the
+closed-weights Gemini 2.5 Flash model selected by BP Digitizer's production
+configuration. This was a direct cloud-model test, not a complete Android app
+test.
+
+On the 100 readable photos:
+
+- Hearth got all three numbers right in 27 photos;
+- Gemini got all three numbers right in 92 photos;
+- every photo Hearth read exactly was also read exactly by Gemini;
+- Gemini alone read another 65 photos exactly;
+- both systems missed eight photos.
+
+Hearth offered 24 best-quality candidates and 22 were exact. Gemini returned
+all three fields for 99 photos and 92 were exact. Those are not identical
+confidence categories: Hearth applies a numerical acceptance threshold, while
+Gemini does not provide a directly comparable confidence score and was asked to
+leave out uncertain fields.
+
+Both systems safely rejected all 25 negative cases under BP Digitizer's rule
+that SYS and DIA must both be present. Gemini returned a SYS value alone for one
+negative image, but the app would reject it because DIA was missing.
+
+Hearth's local Python run took about 0.25 seconds for a typical image. The
+Gemini cloud request took about 2.96 seconds at the median and 17.79 seconds at
+the slowest five-percent boundary in this run. This is not a pure speed test:
+one ran locally and the other included the internet and a cloud service.
+
+The 125 recorded Gemini requests cost about $0.17 at the standard published
+price used for the calculation. Hearth has no per-photo cloud-model fee and can
+keep normal photos on the device. Gemini was much more accurate on this test,
+but requires a network service and brings different cost and privacy tradeoffs.
+Neither result proves medical safety, and these already-examined images are no
+longer a fresh independent test.
+
 ## What these results tell us
 
 The larger test gives a more realistic and less flattering picture than the
@@ -261,5 +298,6 @@ will verify every digit. It should not be used as an unattended reader, as a
 source of medical advice, or as the sole record of a measurement.
 
 For the full technical record, see [Runpod training](RUNPOD_TRAINING.md),
-[external test v2](EXTERNAL_TEST_V2.md), [aggregate results](RESULTS.md), and the
-[model card](MODEL_CARD.md).
+[external test v2](EXTERNAL_TEST_V2.md),
+[Hearth versus Gemini](GEMINI_COMPARISON.md), [aggregate results](RESULTS.md),
+and the [model card](MODEL_CARD.md).

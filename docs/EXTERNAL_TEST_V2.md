@@ -192,7 +192,7 @@ incorrect review result rather than an accepted candidate. No case selected the
 portrait fallback. The two incorrect accepted outputs were isolated single-digit
 classification errors, one in pulse and one in DIA.
 
-The latest local rerun reported a 252 ms median and 269 ms p95 end-to-end Python
+The latest local rerun reported a 250 ms median and 337 ms p95 end-to-end Python
 latency. These are workstation observations, not phone-browser latency claims.
 
 ### By readable source
@@ -217,6 +217,21 @@ candidate-precision Wilson interval is 43.9–100%.
 
 The refusal set is deliberately relevant but narrow. It does not cover every
 possible confusing display, screen, sign, adversarial input or medical device.
+
+## Comparison with BP Digitizer's Gemini model
+
+The same frozen cases were subsequently processed once by the closed-weights
+`gemini-2.5-flash` model selected by BP Digitizer's production configuration.
+Gemini produced 92/100 exact readable triplets, compared with Hearth's 27/100,
+and both systems were safe on 25/25 negative cases under BP Digitizer's rule
+requiring both SYS and DIA. Gemini's median response time was 2.96 seconds,
+including network and cloud service time, compared with 250 ms for Hearth's
+local Python run. These are different execution environments rather than a
+controlled model-speed test.
+
+See [Hearth versus Gemini 2.5 Flash](GEMINI_COMPARISON.md) for definitions,
+paired results, complete-output behavior, cost and limitations. The comparison
+does not make this consumed regression set independent again.
 
 ## Interpretation
 
