@@ -1,12 +1,15 @@
 # Dataset provenance and redistribution
 
-Checked on 6 October 2026. No dataset images or per-image readings are included
-in this repository. Public availability alone does not grant redistribution
-rights. Copyright permission and privacy clearance are separate questions.
+Checked on 8 October 2026. No dataset images or per-image ground-truth manifests
+are intended for Git publication; local ignored test material may exist in a
+working checkout. Public availability alone does not grant redistribution rights.
+Copyright permission and privacy clearance are separate questions.
 
 | Source | Declared license | Copyright redistribution conditions |
 | --- | --- | --- |
 | [Blood Pressure Monitor Display, Final Project, version 1](https://universe.roboflow.com/final-project-cwtfb/blood-pressure-monitor-display/dataset/1) | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) | Credit the creator/project, link the original source and license, retain supplied notices, and indicate modifications. |
+| [Blood Pressure Monitor Digit Reader, naphop, version 9](https://universe.roboflow.com/naphop/blood-pressure-monitor-digit-reader/dataset/9) | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) | External-test source only. Credit the creator/project, source and license; preserve supplied notices and describe preprocessing or modifications. |
+| [Wikimedia Commons](https://commons.wikimedia.org/) external-test candidates | Per-file Public Domain, CC BY or CC BY-SA metadata recorded in the ignored local manifest | Follow each file's source-page license and attribution terms; do not infer one license for the whole collection. |
 | [BP Monitor Reading / Medical Device Images, DataCluster Labs](https://www.kaggle.com/datasets/dataclusterlabs/bp-monitor-reading-medical-device-images) | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) in Kaggle's public dataset metadata | Copyright redistribution is permitted under CC0. Credit and provenance are still useful. |
 | User-provided, camera, and catalog/reference photos | No public redistribution clearance established | Keep local; do not redistribute without appropriate permission. |
 
