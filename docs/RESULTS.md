@@ -1,6 +1,6 @@
 # Aggregate development results
 
-Evaluation date: 6 October 2026. These summarize the local research workflow;
+Evaluation date: 8 October 2026. These summarize the local research workflow;
 the v2 ONNX models are bundled, while detailed per-photo records remain private.
 
 | Model and dataset role | Correct complete readings | Accuracy with refusals | Candidates / eligible | Candidate precision |
@@ -8,6 +8,7 @@ the v2 ONNX models are bundled, while detailed per-photo records remain private.
 | v1 first frozen reserved test | 4 / 13 | 30.8% | 4 / 13 | 100% |
 | v2 public validation, used for selection | 21 / 25 | 84.0% | 19 / 25 | 100% |
 | v2 previously used test, regression only | 7 / 13 | 53.8% | 7 / 13 | 100% |
+| v2 external challenge, staged Python reference, now regression-only | 27 / 100 | 27.0% | 24 / 100 | 91.7% |
 
 The v2 model included additional local training examples whose photos and
 individual readings are omitted. These aggregate figures do not predict the
@@ -20,6 +21,19 @@ has a 95% Wilson interval of 83.2–100%, and validation was also used for selec
 The first frozen test had only four candidates, with a 51.0–100% interval.
 Session and source correlations further weaken independent-observation assumptions.
 **The >90% precision target on new captures remains unproven.**
+
+The external challenge set combines 90 annotation-backed Roboflow test images
+with 10 manually transcribed Wikimedia images. A hash audit excluded 13
+near-matches to the original training corpus. Its single-pass result was 20/100
+exact triplets with 17/19 correct candidates; the staged policy recovered seven
+additional exact readings and produced 22/24 correct candidates. The staged
+exact-accuracy Wilson interval is 19.3–36.4%, while candidate precision is
+74.2–97.7%. Separately, all 25 analog/off/disassembled refusal cases returned no
+reading (Wilson interval 86.7–100%). This public-source set is correlated,
+partially annotation-derived, and was consumed by this evaluation; it is useful
+for regression and error analysis, not an independent clinical claim. The full
+collection, leakage-audit and evaluation record is in
+[External test v2](EXTERNAL_TEST_V2.md).
 
 A subsequent [adaptive crop and lighting-correction revision](ADAPTIVE_CROP.md)
 preserved these original validation/regression results and recovered additional

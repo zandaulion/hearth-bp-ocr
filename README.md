@@ -17,7 +17,8 @@ own licenses and notices in [THIRD_PARTY.md](prototype/THIRD_PARTY.md).
 
 **More than 90% precision on new real-world captures has not been established.**
 Check every value against the monitor. Detection scores are not calibrated
-probabilities. See [aggregate development results](docs/RESULTS.md).
+probabilities. See the [plain-language report](docs/PLAIN_LANGUAGE_REPORT.md) or
+[aggregate development results](docs/RESULTS.md).
 
 The tested detector and digit-recognizer ONNX weights are included (10.9 MB total).
 See the [model card](docs/MODEL_CARD.md) for provenance, checksums and limitations.
@@ -94,6 +95,7 @@ ground truth need those untracked inputs; they are not required by this workflow
 
 ```sh
 python prototype/test_reading.py
+python prototype/test_prepare_data.py
 python evaluation/test_metrics.py
 python tools/check_public_tree.py
 ```
@@ -109,6 +111,11 @@ For the optional Android timing harness, provide consented local images and
 `prototype/web/samples/test-manifest.json`, an array of objects with `file`,
 `expected` (`sys`, `dia`, `pulse`), and `role`. Those inputs are ignored by Git.
 Reports are generated locally and remain ignored too.
+
+The ignored external-v2 regression suite, when present locally, runs with
+`python prototype/evaluate_external_v2.py`. See its complete
+[construction, leakage audit and results](docs/EXTERNAL_TEST_V2.md). These cases
+are permanently excluded from training and calibration.
 
 See [data licensing](docs/DATA_LICENSES.md), [publication policy](docs/PUBLICATION.md),
 and [third-party notices](prototype/THIRD_PARTY.md).

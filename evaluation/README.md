@@ -16,5 +16,11 @@ truth files supplied separately. Generated manifests, images, model artifacts,
 and reports are excluded from Git. Keep new prospective test sessions separate
 from training, model selection, and threshold tuning.
 
+The local `dataset/external_test_v2/` manifests are a frozen regression suite:
+100 readable displays plus 25 images that should yield no reading. Run them with
+`python prototype/evaluate_external_v2.py`. `prototype/prepare_data.py` rejects
+known external-test paths if they are accidentally introduced into a training
+or validation manifest.
+
 See [aggregate development results](../docs/RESULTS.md) and
 [dataset licensing](../docs/DATA_LICENSES.md).

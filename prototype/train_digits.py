@@ -76,26 +76,33 @@ def phone_crops():
 
 def main():
     parser=argparse.ArgumentParser();parser.add_argument("--phone",action="store_true");parser.add_argument("--epochs",type=int,default=40)
+    parser.add_argument("--device",default="auto",help="auto, cpu, or a CUDA device such as 0")
     parser.add_argument("--initial-weights",type=Path);parser.add_argument("--output-dir",type=Path,default=ROOT / "prototype/models")
     parser.add_argument("--web-dir",type=Path,default=ROOT / "prototype/web/models")
     args=parser.parse_args()
+    requested="cuda:0" if args.device=="auto" and torch.cuda.is_available() else ("cpu" if args.device=="auto" else args.device)
+    if requested.isdigit():requested=f"cuda:{requested}"
+    device=torch.device(requested)
+    if device.type=="cuda" and not torch.cuda.is_available():raise RuntimeError(f"CUDA device {device} was requested, but torch.cuda.is_available() is false")
+    print(json.dumps({"training_device":str(device),"cuda_available":torch.cuda.is_available(),"cuda_device":torch.cuda.get_device_name(device) if device.type=="cuda" else None}),flush=True)
     torch.set_num_threads(2);torch.manual_seed(20261006);np.random.seed(20261006);random.seed(20261006)
     train,labels,_=load("train",True);val,vlabels,meta=load("valid")
     n_original=len(train);phone,plabels=phone_crops() if args.phone else ([],np.asarray([],dtype=int))
     train+=phone;labels=np.concatenate((labels,plabels));n_real=len(train);bg=negatives();train+=bg;labels=np.concatenate((labels,np.full(len(bg),10)))
     counts=np.bincount(labels,minlength=11);weights=1/counts[labels];weights[n_original:n_real]*=12
     loader=DataLoader(Crops(train,labels,True),batch_size=96,sampler=WeightedRandomSampler(weights,2400,replacement=True),num_workers=0)
-    vx=torch.stack([torch.from_numpy(digit_tensor(c)) for c in val]);vy=torch.from_numpy(vlabels)
-    model=DigitNet()
-    if args.initial_weights:model.load_state_dict(torch.load(args.initial_weights,weights_only=True))
+    vx=torch.stack([torch.from_numpy(digit_tensor(c)) for c in val]).to(device);vy=torch.from_numpy(vlabels).to(device)
+    model=DigitNet().to(device)
+    if args.initial_weights:model.load_state_dict(torch.load(args.initial_weights,weights_only=True,map_location=device))
     optimizer=torch.optim.AdamW(model.parameters(),lr=.0007 if args.initial_weights else .0015,weight_decay=.001)
     schedule=torch.optim.lr_scheduler.CosineAnnealingLR(optimizer,args.epochs,eta_min=.0001)
-    px=torch.stack([torch.from_numpy(digit_tensor(c)) for c in phone]) if phone else None
-    py=torch.from_numpy(plabels) if phone else None
+    px=torch.stack([torch.from_numpy(digit_tensor(c)) for c in phone]).to(device) if phone else None
+    py=torch.from_numpy(plabels).to(device) if phone else None
     best=-1;started=time.perf_counter();out=args.output_dir;out.mkdir(parents=True,exist_ok=True)
     for epoch in range(args.epochs):
         model.train();losses=[]
         for x,y in loader:
+            x=x.to(device);y=y.to(device)
             optimizer.zero_grad();loss=nn.functional.cross_entropy(model(x),y);loss.backward();optimizer.step();losses.append(float(loss.detach()))
         schedule.step();model.eval()
         with torch.inference_mode():
@@ -103,13 +110,14 @@ def main():
         selection=correct*1000+phone_correct
         if selection>best:best=selection;torch.save(model.state_dict(),out / "digits.pt")
         print(json.dumps({"epoch":epoch+1,"validation_digits_correct":correct,"validation_digits_total":len(vlabels),"phone_training_digits_correct":phone_correct,"phone_training_digits_total":len(phone),"selection_score":selection,"loss":round(float(np.mean(losses)),4),"elapsed_seconds":round(time.perf_counter()-started,1)}),flush=True)
-    model.load_state_dict(torch.load(out / "digits.pt",weights_only=True));model.eval()
-    with torch.inference_mode():prob=model(vx).softmax(1).numpy();pred=prob.argmax(1)
+    model.load_state_dict(torch.load(out / "digits.pt",weights_only=True,map_location=device));model.eval()
+    with torch.inference_mode():prob=model(vx).softmax(1).cpu().numpy();pred=prob.argmax(1)
     groups={}
     for target,p,m in zip(vlabels,pred,meta):groups.setdefault(m["file"],True);groups[m["file"]]&=bool(target==p)
     report={"reader":"DigitNet crop recognition; annotated locations supplied", "training_images":239+(8 if phone else 0),"real_training_digits":n_real,"phone_training_digits":len(phone),"synthetic_background_crops":len(bg),"validation_digits":len(vlabels),"correct_digits":int((pred==vlabels).sum()),"all_digits_correct_images":sum(groups.values()),"validation_images":len(groups),"test_split_used":False,"errors":[{**m,"expected":int(t),"prediction":int(p),"score":float(prob[i,p])} for i,(t,p,m) in enumerate(zip(vlabels,pred,meta)) if t!=p]}
     (out / "digits_validation.json").write_text(json.dumps(report,indent=2))
     web=args.web_dir;web.mkdir(parents=True,exist_ok=True)
+    model=model.cpu()
     torch.onnx.export(model,torch.zeros(1,1,48,32),str(web / "bp-digits.onnx"),input_names=["crops"],output_names=["logits"],dynamic_axes={"crops":{0:"batch"},"logits":{0:"batch"}},opset_version=17,dynamo=False)
     print(json.dumps(report,indent=2),flush=True)
 

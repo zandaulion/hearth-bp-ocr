@@ -16,13 +16,29 @@ npm --prefix prototype ci
 npm --prefix prototype run vendor
 npm --prefix prototype test
 python prototype/test_reading.py
+python prototype/test_prepare_data.py
 python evaluation/test_metrics.py
 python examples/read_image.py path/to/your-local-photo.jpg
 ```
 
-The 20 JavaScript and 11 Python synthetic checks exercise logic; they do not
+The 25 JavaScript assertions and 17 Python checks exercise logic; they do not
 measure OCR accuracy. The image example runs one Python pass. Use browser
 captures to assess the complete browser pipeline, resizing and runtime behavior.
+
+When the ignored frozen external-v2 manifests are available locally, run the
+complete staged ONNX regression with:
+
+```sh
+python prototype/evaluate_external_v2.py
+```
+
+This evaluates `dataset/external_test_v2/readable_truth.json` and
+`refusal_truth.json`, verifies the shipped full-frame/portrait/adaptive policy,
+and writes `prototype/reports/external_test_v2.json`. The 100 readable images
+and 25 refusal cases are test-only: never add them to detector/classifier
+training, validation, threshold calibration, or augmentation. Once evaluated,
+they are a consumed regression benchmark rather than untouched held-out evidence.
+See the complete [construction, audit and results report](EXTERNAL_TEST_V2.md).
 
 ## Data and training workflow
 
@@ -82,6 +98,7 @@ of inference or a prerequisite for using the project.
 | `calibrate.py` | Required `--model`, `--output`; optional `--version`; searches detection/acceptance thresholds using validation only. See `--freeze` caveat above. |
 | `verify_export.py` | Requires generated validation references and matching local `prototype/models/bp-detector.pt`, `digits.pt`; compares detector and classifier numeric output against ONNX on three validation examples. These checkpoints are not bundled. |
 | `evaluate.py` | Required `--model`, `--truth`, `--output`; optional `--digits-model`, `--min-score .25`, `--accept-score .75`, `--size 512`, `--dataset-role`. Does not read released thresholds automatically or run crop fallbacks. |
+| `evaluate_external_v2.py` | Runs the frozen local 100-readable/25-refusal challenge set through the shipped full-frame, portrait-agreement and adaptive-agreement Python ONNX reference. Reads released config thresholds and writes an ignored detailed report. Never use its cases for training or calibration. |
 | `check_views.py` | Required `--truth`; evaluates framing scales 1, .75, .55, writes `prototype/reports/framing_views.json`. Create report directory first. |
 | `evaluate_crop_fallback.py` | Historical experiment; requires public validation/test references and untracked curated references; writes original/synthetic comparisons. Not a turnkey new-checkout command or complete adaptive3 benchmark. |
 | `evaluation/audit_dataset.py` | Dataset structure/duplicate review; also expects local curated ground truth. |
