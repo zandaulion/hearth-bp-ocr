@@ -86,11 +86,56 @@ as soon as these results were inspected.
 An exact result requires all three fields to match. One wrong or omitted field
 makes the entire triplet incorrect.
 
+### All measured external-v2 variants
+
+Every row below uses the same 100 readable images and 25 negative images from
+external v2. For Hearth, a selective output is a calibrated candidate. For ML
+Kit, it is an app-accepted result containing SYS and DIA. For Gemini, it is a
+complete SYS/DIA/pulse output. Precision is exact-triplet precision within that
+row's selective outputs; coverage is the fraction of the 100 readable images
+that produced one. These different output definitions make the table useful for
+comparison, but not perfectly like-for-like.
+
+| System / pipeline | Exact triplets | Selective outputs | Exact-output precision | Coverage | Safe negatives | Median / p95 |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Hearth: one full-frame pass | 20/100 | 17/19 exact | 89.5% | 19% | 25/25 | 86 / 96 ms |
+| Hearth: current staged retries | 27/100 | 22/24 exact | 91.7% | 24% | 25/25 | 253 / 268 ms |
+| Hearth: expanded normalization | 28/100 | 22/24 exact | 91.7% | 24% | 25/25 | 763 / 806 ms |
+| Hearth: display rectification | 28/100 | 23/25 exact | 92.0% | 25% | 25/25 | 260 / 458 ms |
+| Hearth: normalization + rectification | 29/100 | 23/25 exact | 92.0% | 25% | 25/25 | 770 / 1,041 ms |
+| Hearth: digit ensemble throughout | 26/100 | 20/20 exact | 100% | 20% | 25/25 | 262 / 297 ms |
+| Hearth: digit ensemble only as rescue | 28/100 | 22/24 exact | 91.7% | 24% | 25/25 | 518 / 551 ms |
+| ML Kit: original image | 0/100 | 0/15 exact | 0% | 15% | 13/25 | 57 / 208 ms |
+| ML Kit: full-image grayscale | 0/100 | 0/13 exact | 0% | 13% | 19/25 | 60 / 128 ms |
+| ML Kit: detector row crop | 0/100 | 0/5 exact | 0% | 5% | 25/25 | 63 / 93 ms |
+| ML Kit: row crop + grayscale | 0/100 | 0/5 exact | 0% | 5% | 25/25 | 68 / 98 ms |
+| ML Kit: row crop + Otsu | 0/100 | 0/1 exact | 0% | 1% | 25/25 | 64 / 93 ms |
+| ML Kit: row crop + Otsu + dilation | 0/100 | 0/0 | — | 0% | 25/25 | 58 / 88 ms |
+| ML Kit: rectified display | 0/100 | 0/4 exact | 0% | 4% | 24/25 | 64 / 110 ms |
+| ML Kit: rectified + grayscale | 0/100 | 0/4 exact | 0% | 4% | 24/25 | 70 / 118 ms |
+| ML Kit: strict agreement across passes | 0/100 | 0/3 exact | 0% | 3% | 22/25 | 426 / 748 ms |
+| Gemini 2.5 Flash | 92/100 | 92/99 exact | 92.9% | 99% | 25/25 | 2.96 / 17.79 s |
+
+The Hearth rows come from one local Python ablation run. The ML Kit rows were
+measured on a Galaxy A52; detector preprocessing for derived crops was measured
+separately and is not included in their latency column. Gemini latency includes
+the network and hosted service. Runtime numbers therefore describe the observed
+deployments, not intrinsic model speed. The complete ablation setup is in
+[OCR preprocessing and retry ablation](OCR_ABLATION.md).
+
+“Safe negatives” means that BP Digitizer's SYS-and-DIA acceptance rule rejected
+the result. The detector produced row crops for 90/100 readable images and
+rectified views for 43/100; unavailable derived views count as no reading in the
+100-image denominator.
+
+### Released Hearth and Gemini by field
+
+The released Hearth row is the current staged-retry pipeline above. Its exact
+accuracy has a 95% Wilson interval of 19.3–36.4%; Gemini's interval is
+85.0–95.9%.
+
 | Metric | Hearth | Gemini 2.5 Flash |
 | --- | ---: | ---: |
-| Exact SYS/DIA/pulse triplets | 27/100 | 92/100 |
-| Exact-triplet accuracy | 27.0% | 92.0% |
-| Exact accuracy, 95% Wilson interval | 19.3–36.4% | 85.0–95.9% |
 | Correct SYS fields | 33/100 | 98/100 |
 | Correct DIA fields | 34/100 | 97/100 |
 | Correct pulse fields | 34/100 | 96/100 |
