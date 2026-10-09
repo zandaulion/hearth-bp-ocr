@@ -15,7 +15,7 @@ a medically validated measurement system.
 | Understand how the code fits together | [Architecture and source map](ARCHITECTURE.md) |
 | Train, evaluate, debug or publish changes | [Development guide](DEVELOPMENT.md), [Runpod training record](RUNPOD_TRAINING.md) |
 | Check model origins, rights and limitations | [Model card](MODEL_CARD.md), [data licenses](DATA_LICENSES.md), [dependency notices](../prototype/THIRD_PARTY.md) |
-| Interpret the existing evidence | [Results](RESULTS.md), [external test v2](EXTERNAL_TEST_V2.md), [Gemini comparison](GEMINI_COMPARISON.md), [adaptive crop experiments](ADAPTIVE_CROP.md) |
+| Interpret the existing evidence | [Results](RESULTS.md), [external test v3](EXTERNAL_TEST_V3.md), [external test v2](EXTERNAL_TEST_V2.md), [Gemini comparison](GEMINI_COMPARISON.md), [OCR ablation](OCR_ABLATION.md), [adaptive crop experiments](ADAPTIVE_CROP.md) |
 | Understand the public/private boundary | [Publication policy](PUBLICATION.md) |
 | Test phones through an SSH host | [Android skill](../skills/lenovo-android/SKILL.md) |
 

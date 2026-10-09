@@ -1,6 +1,6 @@
 # Aggregate development results
 
-Evaluation date: 8 October 2026. These summarize the local research workflow;
+Evaluation date: 9 October 2026. These summarize the local research workflow;
 the v2 ONNX models are bundled, while detailed per-photo records remain private.
 
 | Model and dataset role | Correct complete readings | Accuracy with refusals | Candidates / eligible | Candidate precision |
@@ -9,6 +9,7 @@ the v2 ONNX models are bundled, while detailed per-photo records remain private.
 | v2 public validation, used for selection | 21 / 25 | 84.0% | 19 / 25 | 100% |
 | v2 previously used test, regression only | 7 / 13 | 53.8% | 7 / 13 | 100% |
 | v2 external challenge, staged Python reference, now regression-only | 27 / 100 | 27.0% | 24 / 100 | 91.7% |
+| v3 fresh external challenge, staged Python reference, now regression-only | 11 / 39 | 28.2% | 10 / 39 | 90.0% |
 
 The v2 model included additional local training examples whose photos and
 individual readings are omitted. These aggregate figures do not predict the
@@ -34,6 +35,15 @@ partially annotation-derived, and was consumed by this evaluation; it is useful
 for regression and error analysis, not an independent clinical claim. The full
 collection, leakage-audit and evaluation record is in
 [External test v2](EXTERNAL_TEST_V2.md).
+
+External test v3 added 39 new readable cases from two pinned public datasets.
+It excluded 494 generated training variants, 22 perceptual overlaps with the
+consumed v2 corpus, three repeated-session cases and one all-segments display
+test before inference. The full-frame baseline was exact on 8/39; the staged
+policy reached 11/39 and produced 9 correct accepted candidates out of 10. The
+accepted-precision Wilson interval is 59.6–98.2%, so this small run does not
+establish the >90% target. See [External test v3](EXTERNAL_TEST_V3.md) for the
+construction, audit, frozen checksum and per-source results.
 
 ## Comparison with BP Digitizer's closed model
 
@@ -61,6 +71,16 @@ and limitations are in [Hearth versus Gemini 2.5 Flash](GEMINI_COMPARISON.md).
 This comparison does not validate either system clinically or restore the
 consumed set's independence.
 
+The fresh external-v3 follow-up showed the same direction on a separately
+frozen set: Hearth was exact on 11/39 triplets and Gemini on 33/39. All 11
+Hearth successes were also Gemini successes; Gemini alone was exact on 22 and
+both missed six. Hearth's 10 accepted candidates contained nine exact triplets
+at 25.6% coverage. Gemini returned complete outputs for all 39 images and 33
+were exact. The confidence categories are not equivalent, and v3 contains no
+negative cases for a refusal comparison. Observed local-versus-cloud median
+times were 232 ms and 2.53 seconds respectively, in different execution
+environments.
+
 A subsequent [adaptive crop and lighting-correction revision](ADAPTIVE_CROP.md)
 preserved these original validation/regression results and recovered additional
 development examples. Its results are reported separately because it was tuned
@@ -69,6 +89,24 @@ after these model evaluations.
 The later adaptive3 row-association change was selected through local regression
 testing. It has not rerun the omitted aggregate corpora in this fresh public
 checkout, so the table above must not be presented as adaptive3 validation.
+
+## Follow-up preprocessing and retry ablation
+
+A later regression-only ablation measured each fallback separately on the same
+consumed external-v2 suite. The current staged retries remained the largest
+gain, moving from 20/100 exact for one full-frame pass to 27/100. Display
+rectification reached 28/100 with similar typical latency; expanded lighting
+normalization also reached 28/100 but was roughly three times slower. Combining
+the two reached 29/100 at the higher latency. A digit-crop ensemble was not a
+useful general replacement.
+
+Bundled Google ML Kit Text Recognition v2 was also measured in a separate local
+Android harness on a Galaxy A52. None of its original, grayscale, cropped,
+thresholded, rectified or strict-consensus variants produced an exact triplet
+out of 100. Cropping improved refusal safety but not complete recognition. See
+the [full OCR ablation](OCR_ABLATION.md) for per-step accuracy, coverage,
+refusal and latency results. Because the suite was already consumed, these
+experiments identify regression candidates but do not establish a fresh gain.
 
 Android browser inference and offline replay worked on a Galaxy A52. Warm OCR
 was approximately 0.84 seconds on repeated development samples. Live Android

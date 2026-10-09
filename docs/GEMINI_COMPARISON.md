@@ -1,6 +1,7 @@
 # Hearth versus Gemini 2.5 Flash
 
-Evaluation date: 8 October 2026.
+Initial evaluation: 8 October 2026. Fresh external-v3 follow-up: 9 October
+2026.
 
 This report compares the bundled Hearth ONNX pipeline with the closed-weights
 Gemini model currently selected for production by BP Digitizer's live Firebase
@@ -30,6 +31,55 @@ using the service's default generation behavior.
 This called Vertex AI directly. It did not exercise the complete Android,
 Firebase AI Logic, App Check or user-interface path, so it should be understood
 as a model comparison rather than an end-to-end BP Digitizer app benchmark.
+
+## Fresh external-v3 follow-up
+
+A second benchmark was assembled from two other pinned public datasets. Its 39
+readable cases, answers, exclusions and checksums were frozen before either
+model result was inspected. Generated variants, repeated sessions and
+perceptual overlaps with external v2 were excluded. The complete construction
+record is in [External test v3](EXTERNAL_TEST_V3.md).
+
+The same released Hearth policy and the same Gemini model, prompt and light
+preprocessing were used. All 39 hosted-model requests completed without an
+error or retry.
+
+| Metric | Hearth | Gemini 2.5 Flash |
+| --- | ---: | ---: |
+| Exact SYS/DIA/pulse triplets | 11/39 | 33/39 |
+| Exact-triplet accuracy | 28.2% | 84.6% |
+| Exact accuracy, 95% Wilson interval | 16.5–43.8% | 70.3–92.8% |
+| Correct SYS fields | 12/39 | 38/39 |
+| Correct DIA fields | 11/39 | 35/39 |
+| Correct pulse fields | 12/39 | 35/39 |
+
+| Outcome on the same image | Images |
+| --- | ---: |
+| Both systems exact | 11 |
+| Hearth exact, Gemini not exact | 0 |
+| Gemini exact, Hearth not exact | 22 |
+| Neither system exact | 6 |
+
+Hearth produced 10 accepted candidates, nine exact: 90.0% precision at 25.6%
+coverage. Gemini returned complete outputs for all 39 images, of which 33 were
+exact: 84.6% exact output at 100% coverage. Those figures are not directly
+equivalent because only Hearth applies a calibrated candidate threshold.
+
+| Source | Hearth exact | Gemini exact |
+| --- | ---: | ---: |
+| Ega | 5/11 | 11/11 |
+| DataCluster | 6/28 | 22/28 |
+
+Observed median/p95 wall time was 232/456 ms for local Hearth and 2.53/5.39
+seconds for Gemini including the network request. Gemini was about 10.9 times
+slower at the median and 11.8 times slower at p95, but the execution environments
+were different. The hosted run used 67,229 tokens in total. External v3 has no
+negative cases, so it adds no comparative refusal evidence.
+
+This fresh follow-up supports the original finding: Gemini recovered many more
+exact triplets, while Hearth's advantages remain local execution and an explicit
+selective-output threshold. The v3 set became a consumed regression benchmark
+as soon as these results were inspected.
 
 ## Readable-image results
 

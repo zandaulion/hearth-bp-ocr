@@ -117,7 +117,12 @@ The ignored external-v2 regression suite, when present locally, runs with
 [construction, leakage audit and results](docs/EXTERNAL_TEST_V2.md). These cases
 are permanently excluded from training and calibration. The same consumed set
 was also used for a documented
-[comparison with BP Digitizer's Gemini model](docs/GEMINI_COMPARISON.md).
+[comparison with BP Digitizer's Gemini model](docs/GEMINI_COMPARISON.md) and a
+[measured preprocessing, retry and ML Kit ablation](docs/OCR_ABLATION.md).
+
+A later model-blind [external test v3](docs/EXTERNAL_TEST_V3.md) used 39 new,
+overlap-audited cases from two pinned public sources. It is also permanently
+test-only and became a consumed regression set after its single frozen run.
 
 See [data licensing](docs/DATA_LICENSES.md), [publication policy](docs/PUBLICATION.md),
 and [third-party notices](prototype/THIRD_PARTY.md).
