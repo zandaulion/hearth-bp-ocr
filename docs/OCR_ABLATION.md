@@ -12,6 +12,37 @@ All reference values and image checksums were frozen before this experiment.
 Every proposed crop was selected from image geometry and model detections, never
 from the expected SYS, DIA or pulse values.
 
+## Combined v2 + v3 regression follow-up
+
+After external v3 had already been evaluated and consumed, every frozen variant
+was run on its 39 readable cases and combined with the original 100 readable v2
+cases. The 25 negative cases come entirely from v2. This post-hoc 139-image view
+is useful for choosing what to test next, but it is not fresh validation.
+
+| Hearth pipeline | v2 exact | v3 exact | Combined exact | Exact candidates | Candidate coverage | Median / p95 combined |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| One full-frame pass | 20/100 | 8/39 | 28/139 | 23/25 (92.0%) | 18.0% | 87 / 178 ms |
+| Current staged retries | 27/100 | 11/39 | 38/139 | 31/34 (91.2%) | 24.5% | 253 / 796 ms |
+| Current + expanded normalization | 28/100 | 14/39 | 42/139 | 33/36 (91.7%) | 25.9% | 757 / 1,886 ms |
+| Current + display rectification | 28/100 | 13/39 | 41/139 | 33/36 (91.7%) | 25.9% | 262 / 1,446 ms |
+| Current + normalization + rectification | 29/100 | 16/39 | 45/139 | 35/38 (92.1%) | 27.3% | 767 / 2,162 ms |
+| Ensemble digit classifier throughout | 26/100 | 9/39 | 35/139 | 28/29 (96.6%) | 20.9% | 262 / 898 ms |
+| Current + ensemble only as rescue | 28/100 | 11/39 | 39/139 | 31/34 (91.2%) | 24.5% | 520 / 1,617 ms |
+
+The combined normalization-and-rectification pipeline recovered seven exact
+triplets that the current staged policy missed and did not lose any of the
+current policy's 38 exact results. Its 45/139 exact accuracy is 32.4% (95%
+Wilson interval 25.2–40.5%). Its 35/38 candidate precision is 92.1% (interval
+79.2–97.3%). The latency cost is substantial, and selecting it on this consumed
+benchmark means a new untouched set is required before calling it an improvement
+in generalization.
+
+ML Kit's original-image pass recovered one exact triplet on v3, producing 1/139
+combined (0.7%) and 1/24 exact app-accepted outputs. The other eight ML Kit
+variants remained at 0/139. All 25 negative outcomes remain the older v2 cases,
+so this follow-up adds no negative-case safety evidence. The full cross-system
+table is in [Hearth versus Gemini 2.5 Flash](GEMINI_COMPARISON.md).
+
 ## Hearth ablation
 
 Each row adds or substitutes one specific behavior. An exact result requires all
@@ -110,6 +141,11 @@ detailed report only to the ignored reports directory:
 
 ```sh
 .venv/bin/python prototype/evaluate_ablation.py
+.venv/bin/python prototype/evaluate_ablation.py \
+  --truth dataset/external_test_v3/readable_truth.json \
+  --refusals dataset/external_test_v3/refusal_truth.json \
+  --benchmark "external-v3 consumed regression suite" \
+  --output prototype/reports/ablation_v3.json
 ```
 
 The public Android bundle, including detector-selected derived views, is created
@@ -118,6 +154,13 @@ outside the repository:
 ```sh
 .venv/bin/python tools/export_android_benchmark.py \
   /tmp/hearth-mlkit-benchmark --derived-views
+```
+
+After both Hearth, ML Kit and Gemini report pairs exist locally, the
+aggregate-only report is rebuilt with:
+
+```sh
+python tools/aggregate_full_benchmark.py
 ```
 
 Detailed per-image Hearth and ML Kit reports remain ignored because they are

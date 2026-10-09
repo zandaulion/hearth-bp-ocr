@@ -49,3 +49,17 @@ python tools/build_external_test_v3.py freeze
 The frozen manifest is permanently test-only. Run inference only after its
 checksum has been recorded; do not use its outcomes to tune preprocessing,
 thresholds, weights, or selection rules.
+
+## Combined consumed regression report
+
+Once the ignored v2 and v3 Hearth, ML Kit and Gemini reports exist, rebuild the
+aggregate-only comparison with:
+
+```bash
+python tools/aggregate_full_benchmark.py
+```
+
+The generated `prototype/reports/full_consumed_benchmark.json` remains ignored.
+It contains aggregate metrics and input-report checksums, not per-image values.
+The combined 139-readable/25-negative result is a regression benchmark only;
+selecting a variant from it requires a new untouched set for confirmation.

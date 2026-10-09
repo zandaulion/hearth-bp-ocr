@@ -171,6 +171,33 @@ Observed median/p95 wall time was 232/456 ms for local Hearth inference and
 controlled hardware comparison. The 39 Gemini requests used 67,229 tokens in
 total. V3 contains no negative cases, so it cannot compare refusal behavior.
 
+## Post-hoc variant comparison
+
+After the frozen Hearth and Gemini comparison above had consumed v3, every
+pre-existing Hearth ablation variant was run on the same 39 readable images.
+These results can be combined with v2 for regression analysis, but are not a
+second prospective test.
+
+| Hearth pipeline | Exact triplets | Exact candidates | Candidate coverage | Median / p95 rerun |
+| --- | ---: | ---: | ---: | ---: |
+| One full-frame pass | 8/39 | 6/6 | 15.4% | 155 / 212 ms |
+| Current staged retries | 11/39 | 9/10 | 25.6% | 361 / 864 ms |
+| Expanded normalization | 14/39 | 11/12 | 30.8% | 355 / 2,951 ms |
+| Display rectification | 13/39 | 10/11 | 28.2% | 664 / 2,036 ms |
+| Normalization + rectification | 16/39 | 12/13 | 33.3% | 703 / 2,797 ms |
+| Digit ensemble throughout | 9/39 | 8/9 | 23.1% | 461 / 986 ms |
+| Digit ensemble only as rescue | 11/39 | 9/10 | 25.6% | 709 / 1,714 ms |
+
+The combined normalization-and-rectification variant recovered five exact
+triplets beyond the current policy on v3. Its settings were fixed before this
+run, but the set had already been inspected; selecting it here still requires a
+new untouched test. Rerun latency differs from the original frozen run because
+these measurements were collected separately.
+
+The nine ML Kit variants were also rerun on the same Galaxy A52. The original-
+image pass was exact on 1/39; every grayscale, crop, threshold, rectification and
+strict-consensus variant was exact on 0/39. V3 still contains no negatives.
+
 ## Interpretation
 
 This is stronger evidence than rerunning the already consumed v2 set: source
