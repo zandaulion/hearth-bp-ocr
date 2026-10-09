@@ -24,3 +24,28 @@ or validation manifest.
 
 See [aggregate development results](../docs/RESULTS.md) and
 [dataset licensing](../docs/DATA_LICENSES.md).
+
+## Prospective external test v3
+
+`tools/build_external_test_v3.py` prepares a new model-blind benchmark from two
+pinned Roboflow Universe exports. Keep the API key in `ROBOFLOW_API_KEY` or in
+the ignored repository `.env` file; never pass it on the command line.
+
+```bash
+python tools/build_external_test_v3.py download
+python tools/build_external_test_v3.py prepare
+```
+
+`prepare` reconstructs candidate readings only from the source digit boxes,
+creates annotated contact sheets, and audits exact and perceptual overlap with
+the existing local corpus. It does not run Hearth. A person must complete the
+ignored `dataset/external_test_v3_review/review.json`, checking the visible
+reading, scope, privacy, and every reported near duplicate. Only then run:
+
+```bash
+python tools/build_external_test_v3.py freeze
+```
+
+The frozen manifest is permanently test-only. Run inference only after its
+checksum has been recorded; do not use its outcomes to tune preprocessing,
+thresholds, weights, or selection rules.

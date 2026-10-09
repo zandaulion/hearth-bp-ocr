@@ -174,6 +174,27 @@ was wrong but marked for review rather than accepted as a candidate.
 
 No image in this test was recovered by the portrait-crop step.
 
+### Which additional ideas helped most?
+
+A follow-up experiment separated several common OCR suggestions so their impact
+could be measured instead of guessed. The existing staged retries remained the
+largest improvement: they raised complete accuracy from 20/100 for one pass to
+27/100. Automatically straightening a likely display recovered one additional
+photo with almost no change to typical runtime. More aggressive lighting
+normalization also recovered one, but made a typical run roughly three times as
+slow. Combining both reached 29/100, again at roughly three times the current
+runtime. A multi-crop digit ensemble did not work well as a replacement; used
+only after a refusal, it recovered one additional photo at substantial cost.
+
+Google ML Kit Text Recognition v2 was also tested locally in a separate harness
+on a Galaxy A52. Raw images, grayscale, detector-selected crops, thresholding,
+straightening and strict agreement between retries all produced **0/100 exact
+triplets**. Looking at ML Kit's raw text showed that no photo contained all three
+correct values at once, so changing the parser could not recover a complete
+answer. On this set, cropping made ML Kit more likely to refuse safely, but did
+not make it a useful replacement for the specialized models. See the
+[full ablation](OCR_ABLATION.md) for the per-step accuracy and latency table.
+
 ## Results on 25 images with no readable result
 
 All 25 negative cases were refused:
@@ -224,6 +245,32 @@ Neither result proves medical safety, and these already-examined images are no
 longer a fresh independent test.
 
 ## What these results tell us
+
+A second model-blind outside test was later built from two other public image
+collections. Generated variants, repeated sessions and images resembling the
+older test were removed before the model ran. This left 39 new readable photos.
+The simple full-photo pass read 8 correctly. The complete retry pipeline read
+11 correctly, and 9 of its 10 accepted answers were right. In the remaining
+accepted answer, one digit in the middle number was wrong.
+
+This newer result tells the same basic story: retries help, but the system still
+refuses most usable photographs and confidence filtering does not eliminate
+digit errors.
+
+The same 39 photos were then tested once with Gemini 2.5 Flash. Hearth got all
+three numbers right in 11 photos, while Gemini did so in 33. Every Hearth
+success was also a Gemini success. Hearth offered 10 best-quality candidates;
+nine were exact. Gemini returned all three fields for every photo, and 33 of
+those 39 complete outputs were exact. Those are different kinds of output:
+Hearth deliberately withholds most answers through a confidence threshold,
+while Gemini does not provide an equivalent calibrated score.
+
+Typical measured processing time was about 0.23 seconds for Hearth locally and
+2.53 seconds for the Gemini request including the network. This is not a fair
+hardware speed contest, but it illustrates the practical local-versus-cloud
+tradeoff. The 39 cases are now a consumed regression set, and they contain no
+negative images for testing refusal safety. Full construction and results are
+in [external test v3](EXTERNAL_TEST_V3.md).
 
 The larger test gives a more realistic and less flattering picture than the
 small pilot or validation results:
@@ -298,6 +345,7 @@ will verify every digit. It should not be used as an unattended reader, as a
 source of medical advice, or as the sole record of a measurement.
 
 For the full technical record, see [Runpod training](RUNPOD_TRAINING.md),
+[external test v3](EXTERNAL_TEST_V3.md),
 [external test v2](EXTERNAL_TEST_V2.md),
 [Hearth versus Gemini](GEMINI_COMPARISON.md), [aggregate results](RESULTS.md),
 and the [model card](MODEL_CARD.md).
