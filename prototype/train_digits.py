@@ -17,7 +17,7 @@ ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT))
 sys.path.insert(0,str(ROOT / "evaluation"))
 from dataset_tools import annotations,DATA
-from prototype.digit_model import DigitNet,digit_tensor
+from prototype.digit_model import DigitNet,SegmentAwareDigitNet,SegmentDecoderDigitNet,digit_tensor
 from prototype.reading import CLASS_NAMES
 
 
@@ -42,6 +42,10 @@ SEGMENT_LINES = {
     "f": ((7, 7), (7, 22)),
     "g": ((8, 24), (24, 24)),
 }
+SEGMENT_TARGETS = torch.tensor([
+    [float(name in SEGMENTS[digit]) for name in "abcdefg"]
+    for digit in range(10)
+])
 
 
 def synthetic_digits(count_per_digit):
@@ -120,6 +124,34 @@ def negatives(count=180):
     return crops
 
 
+def balanced_loader(crops, labels, weights, samples=2400):
+    return DataLoader(
+        Crops(crops, labels, True),
+        batch_size=96,
+        sampler=WeightedRandomSampler(weights, samples, replacement=True),
+        num_workers=0,
+    )
+
+
+def train_epoch(model, loader, optimizer, device, segment_auxiliary_weight=0.0):
+    model.train();losses=[]
+    for x,y in loader:
+        x=x.to(device);y=y.to(device)
+        optimizer.zero_grad()
+        if segment_auxiliary_weight:
+            logits,segment_logits=model.forward_with_segments(x)
+            loss=nn.functional.cross_entropy(logits,y)
+            foreground=y<10
+            if foreground.any():
+                targets=SEGMENT_TARGETS.to(device)[y[foreground]]
+                segment_loss=nn.functional.binary_cross_entropy_with_logits(segment_logits[foreground],targets)
+                loss=loss+segment_auxiliary_weight*segment_loss
+        else:
+            loss=nn.functional.cross_entropy(model(x),y)
+        loss.backward();optimizer.step();losses.append(float(loss.detach()))
+    return round(float(np.mean(losses)),4)
+
+
 def phone_crops():
     paths=sorted((ROOT / "prototype/data/phone_train/images").glob("*.jpg"));crops=[];labels=[]
     for path in paths:
@@ -138,6 +170,10 @@ def main():
     parser.add_argument("--initial-weights",type=Path);parser.add_argument("--output-dir",type=Path,default=ROOT / "prototype/models")
     parser.add_argument("--web-dir",type=Path,default=ROOT / "prototype/web/models")
     parser.add_argument("--synthetic-positive-count-per-digit",type=int,default=0)
+    parser.add_argument("--synthetic-pretrain-count-per-digit",type=int,default=0)
+    parser.add_argument("--synthetic-pretrain-epochs",type=int,default=15)
+    parser.add_argument("--segment-auxiliary-weight",type=float,default=0.0)
+    parser.add_argument("--segment-decoder",action="store_true")
     args=parser.parse_args()
     requested="cuda:0" if args.device=="auto" and torch.cuda.is_available() else ("cpu" if args.device=="auto" else args.device)
     if requested.isdigit():requested=f"cuda:{requested}"
@@ -153,31 +189,45 @@ def main():
     bg=negatives();train+=bg;labels=np.concatenate((labels,np.full(len(bg),10)))
     counts=np.bincount(labels,minlength=11);weights=1/counts[labels];weights[n_original:n_real]*=12
     weights[n_real:n_positive]*=.35
-    loader=DataLoader(Crops(train,labels,True),batch_size=96,sampler=WeightedRandomSampler(weights,2400,replacement=True),num_workers=0)
+    loader=balanced_loader(train,labels,weights)
     vx=torch.stack([torch.from_numpy(digit_tensor(c)) for c in val]).to(device);vy=torch.from_numpy(vlabels).to(device)
-    model=DigitNet().to(device)
+    if args.segment_decoder:
+        model=SegmentDecoderDigitNet().to(device)
+    else:
+        model=(SegmentAwareDigitNet() if args.segment_auxiliary_weight else DigitNet()).to(device)
     if args.initial_weights:model.load_state_dict(torch.load(args.initial_weights,weights_only=True,map_location=device))
-    optimizer=torch.optim.AdamW(model.parameters(),lr=.0007 if args.initial_weights else .0015,weight_decay=.001)
+    pretrain,pretrain_labels=synthetic_digits(args.synthetic_pretrain_count_per_digit)
+    if pretrain:
+        pretrain_bg=negatives(max(180,args.synthetic_pretrain_count_per_digit))
+        pretrain+=pretrain_bg
+        pretrain_labels=np.concatenate((pretrain_labels,np.full(len(pretrain_bg),10)))
+        pretrain_counts=np.bincount(pretrain_labels,minlength=11)
+        pretrain_weights=1/pretrain_counts[pretrain_labels]
+        pretrain_loader=balanced_loader(pretrain,pretrain_labels,pretrain_weights)
+        pretrain_optimizer=torch.optim.AdamW(model.parameters(),lr=.0015,weight_decay=.001)
+        pretrain_schedule=torch.optim.lr_scheduler.CosineAnnealingLR(pretrain_optimizer,args.synthetic_pretrain_epochs,eta_min=.0001)
+        for epoch in range(args.synthetic_pretrain_epochs):
+            loss=train_epoch(model,pretrain_loader,pretrain_optimizer,device,args.segment_auxiliary_weight)
+            pretrain_schedule.step()
+            print(json.dumps({"stage":"synthetic-pretrain","epoch":epoch+1,"epochs":args.synthetic_pretrain_epochs,"loss":loss}),flush=True)
+    optimizer=torch.optim.AdamW(model.parameters(),lr=.0007 if args.initial_weights or pretrain else .0015,weight_decay=.001)
     schedule=torch.optim.lr_scheduler.CosineAnnealingLR(optimizer,args.epochs,eta_min=.0001)
     px=torch.stack([torch.from_numpy(digit_tensor(c)) for c in phone]).to(device) if phone else None
     py=torch.from_numpy(plabels).to(device) if phone else None
     best=-1;started=time.perf_counter();out=args.output_dir;out.mkdir(parents=True,exist_ok=True)
     for epoch in range(args.epochs):
-        model.train();losses=[]
-        for x,y in loader:
-            x=x.to(device);y=y.to(device)
-            optimizer.zero_grad();loss=nn.functional.cross_entropy(model(x),y);loss.backward();optimizer.step();losses.append(float(loss.detach()))
+        loss=train_epoch(model,loader,optimizer,device,args.segment_auxiliary_weight)
         schedule.step();model.eval()
         with torch.inference_mode():
             pred=model(vx).argmax(1);correct=int((pred==vy).sum());phone_correct=int((model(px).argmax(1)==py).sum()) if px is not None else 0
         selection=correct*1000+phone_correct
         if selection>best:best=selection;torch.save(model.state_dict(),out / "digits.pt")
-        print(json.dumps({"epoch":epoch+1,"validation_digits_correct":correct,"validation_digits_total":len(vlabels),"phone_training_digits_correct":phone_correct,"phone_training_digits_total":len(phone),"selection_score":selection,"loss":round(float(np.mean(losses)),4),"elapsed_seconds":round(time.perf_counter()-started,1)}),flush=True)
+        print(json.dumps({"stage":"real-finetune" if pretrain else "train","epoch":epoch+1,"validation_digits_correct":correct,"validation_digits_total":len(vlabels),"phone_training_digits_correct":phone_correct,"phone_training_digits_total":len(phone),"selection_score":selection,"loss":loss,"elapsed_seconds":round(time.perf_counter()-started,1)}),flush=True)
     model.load_state_dict(torch.load(out / "digits.pt",weights_only=True,map_location=device));model.eval()
     with torch.inference_mode():prob=model(vx).softmax(1).cpu().numpy();pred=prob.argmax(1)
     groups={}
     for target,p,m in zip(vlabels,pred,meta):groups.setdefault(m["file"],True);groups[m["file"]]&=bool(target==p)
-    report={"reader":"DigitNet crop recognition; annotated locations supplied", "training_images":239+(8 if phone else 0),"real_training_digits":n_real,"phone_training_digits":len(phone),"synthetic_positive_crops":len(synthetic),"synthetic_positive_weight_multiplier":.35,"synthetic_background_crops":len(bg),"validation_digits":len(vlabels),"correct_digits":int((pred==vlabels).sum()),"all_digits_correct_images":sum(groups.values()),"validation_images":len(groups),"test_split_used":False,"errors":[{**m,"expected":int(t),"prediction":int(p),"score":float(prob[i,p])} for i,(t,p,m) in enumerate(zip(vlabels,pred,meta)) if t!=p]}
+    report={"reader":"DigitNet crop recognition; annotated locations supplied", "training_images":239+(8 if phone else 0),"real_training_digits":n_real,"phone_training_digits":len(phone),"synthetic_positive_crops":len(synthetic),"synthetic_positive_weight_multiplier":.35,"synthetic_pretrain_positive_crops":10*args.synthetic_pretrain_count_per_digit,"synthetic_pretrain_epochs":args.synthetic_pretrain_epochs if pretrain else 0,"segment_auxiliary_weight":args.segment_auxiliary_weight,"segment_decoder":args.segment_decoder,"synthetic_background_crops":len(bg),"validation_digits":len(vlabels),"correct_digits":int((pred==vlabels).sum()),"all_digits_correct_images":sum(groups.values()),"validation_images":len(groups),"test_split_used":False,"errors":[{**m,"expected":int(t),"prediction":int(p),"score":float(prob[i,p])} for i,(t,p,m) in enumerate(zip(vlabels,pred,meta)) if t!=p]}
     (out / "digits_validation.json").write_text(json.dumps(report,indent=2))
     web=args.web_dir;web.mkdir(parents=True,exist_ok=True)
     model=model.cpu()

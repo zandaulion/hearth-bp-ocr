@@ -332,6 +332,22 @@ class EnsembleDigitRecognizer(DigitRecognizer):
         return kept
 
 
+class ClaheDigitRecognizer(EnsembleDigitRecognizer):
+    """Classify one CLAHE-normalized version of each detector digit crop."""
+
+    def _variants(self, image, box):
+        x1, y1, x2, y2 = box
+        height, width = image.shape[:2]
+        crop = image[
+            max(0, math.floor(y1)):min(height, math.ceil(y2)),
+            max(0, math.floor(x1)):min(width, math.ceil(x2)),
+        ]
+        if not crop.size:
+            return []
+        gray = cv2.cvtColor(crop, cv2.COLOR_BGR2GRAY)
+        return [cv2.createCLAHE(clipLimit=2.0, tileGridSize=(4, 4)).apply(gray)]
+
+
 def rescue_pipeline(primary, rescue, image, min_score, accept_score):
     original, details = current_pipeline(primary, image, min_score, accept_score)
     if is_plausible_reading(original["reading"]):
@@ -521,6 +537,10 @@ def main():
         help="Directory containing config.json, bp-detector.onnx and bp-digits.onnx.",
     )
     parser.add_argument(
+        "--digits-model", type=Path,
+        help="Optional DigitNet ONNX override; detector and config still come from --model-dir.",
+    )
+    parser.add_argument(
         "--pipelines", nargs="+",
         default=[
             "full-frame",
@@ -537,10 +557,14 @@ def main():
     model_dir = args.model_dir
     config = json.loads((model_dir / "config.json").read_text())
     detector_path = model_dir / "bp-detector.onnx"
-    digits_path = model_dir / "bp-digits.onnx"
+    digits_path = args.digits_model or model_dir / "bp-digits.onnx"
     standard = Detector(detector_path, digit_model=digits_path)
     ensemble = Detector(detector_path, digit_model=None)
     ensemble.recognizer = EnsembleDigitRecognizer(
+        digits_path, min_score=config["digitMinScore"]
+    )
+    clahe = Detector(detector_path, digit_model=None)
+    clahe.recognizer = ClaheDigitRecognizer(
         digits_path, min_score=config["digitMinScore"]
     )
     truth = json.loads(args.truth.read_text())
@@ -556,6 +580,9 @@ def main():
         implementation_name = requested_name
         if requested_name == "digit-ensemble-current":
             detector = ensemble
+            implementation_name = "current-staged"
+        if requested_name == "digit-clahe-current":
+            detector = clahe
             implementation_name = "current-staged"
         readable_records = []
         refusal_records = []

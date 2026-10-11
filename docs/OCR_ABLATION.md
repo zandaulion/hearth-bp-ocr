@@ -126,6 +126,82 @@ python prototype/train_digits.py \
   --synthetic-positive-count-per-digit 120
 ```
 
+### DigitNet bottleneck and seven-segment follow-up
+
+A second follow-up separated missed digit boxes from wrong DigitNet labels. Of
+the 139 readable benchmark images, 129 have reusable source digit boxes. They
+contain 931 annotated digits. In one full-frame pass at the released 0.20
+detector threshold, 616/931 digits matched a detector crop at IoU 0.30 or
+higher, and all annotated digits were matched in only 24/129 images. On those
+616 matched crops, the released DigitNet classified 576 correctly (93.5% raw
+top-1). At its 0.50 acceptance threshold, 571/592 retained labels were correct
+(96.5%). This makes missed localization the larger single-pass bottleneck,
+although DigitNet errors still matter once a crop exists.
+
+The classifier diagnostic uses source boxes only for matching and scoring; no
+source box is supplied to the end-to-end pipeline. Ten v2 images without source
+digit boxes are excluded from the crop-only denominator but remain in every
+139-image end-to-end result. The IoU cutoff and all variants below were examined
+on an already consumed benchmark, so this is failure analysis rather than a new
+generalization test.
+
+| DigitNet training/inference arm | Matched-crop top-1 | Exact triplets | Exact candidates | Candidate precision | Coverage | Safe negatives |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Released DigitNet | 576/616 | 38/139 | 31/34 | 91.2% | 24.5% | 25/25 |
+| Matched real-only retrain | 561/616 | 34/139 | 28/32 | 87.5% | 23.0% | 25/25 |
+| + 1,200 mixed synthetic crops | 573/616 | 39/139 | 32/35 | 91.4% | 25.2% | 25/25 |
+| Pretrain on 1,200 synthetic, then real | 561/616 | 36/139 | 30/33 | 90.9% | 23.7% | 25/25 |
+| Pretrain on 6,000 synthetic, then real | 572/616 | 39/139 | 32/34 | 94.1% | 24.5% | 25/25 |
+| Seven-segment auxiliary loss, real only | 549/616 | 36/139 | 30/30 | 100% | 21.6% | 25/25 |
+| Seven-segment auxiliary loss + mixed synthetic | 566/616 | 41/139 | 33/34 | 97.1% | 24.5% | 25/25 |
+| Direct seven-segment decoder + mixed synthetic | 572/616 | 41/139 | 33/33 | 100% | 23.7% | 25/25 |
+
+Every arm reached 179/179 on the existing annotation-crop validation set, even
+when its external crop accuracy was materially worse. That validation result is
+therefore saturated and cannot select a better DigitNet. Synthetic pretraining
+did not beat simply mixing generated crops into real training. Applying CLAHE
+only to detected digit crops also failed end to end: it reduced exact triplets
+from 38/139 to 34/139.
+
+The two segment-aware mixed arms are the most useful candidates for a sealed
+retest, but neither is ready to replace the released model. Relative to the
+released pipeline, the auxiliary-loss arm gained four exact images and lost one
+(paired exact McNemar p=0.375); the direct decoder gained five and lost two
+(p=0.453). Both netted only three additional exact triplets on a benchmark used
+to choose them. Their shared 41/139 exact result is 29.5% with a 95% Wilson
+interval of 22.6–37.6%. Candidate precision is 33/34 (97.1%, interval
+85.1–99.5%) for the auxiliary model and 33/33 (100%, interval 89.6–100%) for the
+direct decoder. A new untouched set is required to distinguish a real gain from
+selection noise.
+
+The crop diagnostic is reproduced with:
+
+```sh
+python tools/evaluate_digitnet_crops.py \
+  --truth dataset/external_test_v2/readable_truth.json \
+          dataset/external_test_v3/readable_truth.json \
+  --detector prototype/web/models/bp-detector.onnx \
+  --digits prototype/web/models/bp-digits.onnx \
+  --output prototype/reports/digitnet_crop_diagnostic.json
+```
+
+Synthetic pretraining and segment experiments are opt-in training flags:
+
+```sh
+python prototype/train_digits.py --epochs 40 \
+  --synthetic-pretrain-count-per-digit 600 \
+  --synthetic-pretrain-epochs 20
+
+python prototype/train_digits.py --epochs 40 \
+  --synthetic-positive-count-per-digit 120 \
+  --segment-auxiliary-weight 0.3
+
+python prototype/train_digits.py --epochs 40 \
+  --synthetic-positive-count-per-digit 120 \
+  --segment-auxiliary-weight 0.3 \
+  --segment-decoder
+```
+
 ## Hearth ablation
 
 Each row adds or substitutes one specific behavior. An exact result requires all
