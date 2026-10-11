@@ -86,11 +86,75 @@ as soon as these results were inspected.
 An exact result requires all three fields to match. One wrong or omitted field
 makes the entire triplet incorrect.
 
+### All measured variants on the combined consumed benchmark
+
+This post-hoc table combines the 100 external-v2 and 39 external-v3 readable
+images. The 25 negative cases all come from v2 because v3 contains no negatives.
+Both suites were already consumed before this aggregation, so the larger
+denominator improves regression measurement but does not create fresh held-out
+evidence.
+
+For Hearth, a selective output is a calibrated candidate. For ML Kit, it is an
+app-accepted result containing SYS and DIA. For Gemini, it is a complete
+SYS/DIA/pulse output. Precision is exact-triplet precision within that row's
+selective outputs; coverage is the fraction of the 139 readable images that
+produced one. These different output definitions make the table useful for
+comparison, but not perfectly like-for-like.
+
+| System / pipeline | Exact triplets | Selective outputs | Exact-output precision | Coverage | Safe negatives | Median / p95 |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Hearth: one full-frame pass | 28/139 | 23/25 exact | 92.0% | 18.0% | 25/25 | 87 / 178 ms |
+| Hearth: current staged retries | 38/139 | 31/34 exact | 91.2% | 24.5% | 25/25 | 253 / 796 ms |
+| Hearth: expanded normalization | 42/139 | 33/36 exact | 91.7% | 25.9% | 25/25 | 757 / 1,886 ms |
+| Hearth: display rectification | 41/139 | 33/36 exact | 91.7% | 25.9% | 25/25 | 262 / 1,446 ms |
+| Hearth: normalization + rectification | 45/139 | 35/38 exact | 92.1% | 27.3% | 25/25 | 767 / 2,162 ms |
+| Hearth: digit ensemble throughout | 35/139 | 28/29 exact | 96.6% | 20.9% | 25/25 | 262 / 898 ms |
+| Hearth: digit ensemble only as rescue | 39/139 | 31/34 exact | 91.2% | 24.5% | 25/25 | 520 / 1,617 ms |
+| ML Kit: original image | 1/139 | 1/24 exact | 4.2% | 17.3% | 13/25 | 63 / 334 ms |
+| ML Kit: full-image grayscale | 0/139 | 0/22 exact | 0% | 15.8% | 19/25 | 64 / 192 ms |
+| ML Kit: detector row crop | 0/139 | 0/9 exact | 0% | 6.5% | 25/25 | 65 / 121 ms |
+| ML Kit: row crop + grayscale | 0/139 | 0/7 exact | 0% | 5.0% | 25/25 | 72 / 133 ms |
+| ML Kit: row crop + Otsu | 0/139 | 0/1 exact | 0% | 0.7% | 25/25 | 68 / 158 ms |
+| ML Kit: row crop + Otsu + dilation | 0/139 | 0/0 | — | 0% | 25/25 | 64 / 178 ms |
+| ML Kit: rectified display | 0/139 | 0/9 exact | 0% | 6.5% | 24/25 | 71 / 287 ms |
+| ML Kit: rectified + grayscale | 0/139 | 0/9 exact | 0% | 6.5% | 24/25 | 74 / 222 ms |
+| ML Kit: strict agreement across passes | 0/139 | 0/5 exact | 0% | 3.6% | 22/25 | 460 / 1,205 ms |
+| Gemini 2.5 Flash | 125/139 | 125/138 exact | 90.6% | 99.3% | 25/25 | 2.76 / 15.24 s |
+
+The Hearth rows combine the v2 and v3 local Python ablation runs. The ML Kit
+rows combine two runs on the same Galaxy A52; detector preprocessing for derived
+crops was measured separately and is not included in their latency column.
+Gemini latency includes the network and hosted service. Runtime numbers therefore
+describe the observed deployments, not intrinsic model speed. The complete
+ablation setup is in
+[OCR preprocessing and retry ablation](OCR_ABLATION.md).
+
+“Safe negatives” means that BP Digitizer's SYS-and-DIA acceptance rule rejected
+the result. The detector produced row crops for 113/139 readable images and
+rectified views for 66/139; unavailable derived views count as no reading in the
+139-image denominator.
+
+The normalization-plus-rectification variant recovered seven exact triplets
+beyond the current staged policy and lost none of the current policy's exact
+successes. It reached 45/139 exact (32.4%, 95% Wilson interval 25.2–40.5%) and
+35/38 exact candidates (92.1%, interval 79.2–97.3%) at roughly three times the
+median latency. Because this variant is being selected after inspecting the
+consumed benchmark, those gains are a regression result and require confirmation
+on a new untouched set.
+
+Every one of those 45 exact Hearth results was also exact for Gemini. Gemini was
+exact alone on another 80 images, and both missed 14. ML Kit's original-image
+pass recovered one exact triplet in v3, making 1/139 combined; every processed
+ML Kit variant remained at 0/139.
+
+### Original external-v2 released Hearth and Gemini by field
+
+On external v2 alone, the released Hearth row is the current staged-retry
+pipeline. Its exact accuracy has a 95% Wilson interval of 19.3–36.4%; Gemini's
+interval is 85.0–95.9%.
+
 | Metric | Hearth | Gemini 2.5 Flash |
 | --- | ---: | ---: |
-| Exact SYS/DIA/pulse triplets | 27/100 | 92/100 |
-| Exact-triplet accuracy | 27.0% | 92.0% |
-| Exact accuracy, 95% Wilson interval | 19.3–36.4% | 85.0–95.9% |
 | Correct SYS fields | 33/100 | 98/100 |
 | Correct DIA fields | 34/100 | 97/100 |
 | Correct pulse fields | 34/100 | 96/100 |

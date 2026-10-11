@@ -511,6 +511,16 @@ def main():
         default=ROOT / "prototype/reports/ablation_v1.json",
     )
     parser.add_argument(
+        "--benchmark",
+        default="external-v2 consumed regression suite",
+        help="Descriptive benchmark label stored in the ignored report.",
+    )
+    parser.add_argument(
+        "--model-dir", type=Path,
+        default=ROOT / "prototype/web/models",
+        help="Directory containing config.json, bp-detector.onnx and bp-digits.onnx.",
+    )
+    parser.add_argument(
         "--pipelines", nargs="+",
         default=[
             "full-frame",
@@ -524,7 +534,7 @@ def main():
     )
     args = parser.parse_args()
 
-    model_dir = ROOT / "prototype/web/models"
+    model_dir = args.model_dir
     config = json.loads((model_dir / "config.json").read_text())
     detector_path = model_dir / "bp-detector.onnx"
     digits_path = model_dir / "bp-digits.onnx"
@@ -604,7 +614,7 @@ def main():
         }), flush=True)
 
     report = {
-        "benchmark": "external-v2 consumed regression suite",
+        "benchmark": args.benchmark,
         "independentHeldOutClaim": False,
         "selectionAllowed": False,
         "config": config,

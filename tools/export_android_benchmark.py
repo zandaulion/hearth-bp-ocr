@@ -121,6 +121,11 @@ def main():
         action="store_true",
         help="Export detector-selected row crops and display rectifications.",
     )
+    parser.add_argument(
+        "--benchmark",
+        default="external-v2 consumed regression suite",
+        help="Descriptive benchmark label stored in the exported manifest.",
+    )
     args = parser.parse_args()
     output = args.output.resolve()
     if ROOT == output or ROOT in output.parents:
@@ -144,7 +149,7 @@ def main():
         detector, min_score, accept_score,
     )
     manifest = {
-        "benchmark": "external-v2 consumed regression suite",
+        "benchmark": args.benchmark,
         "independentHeldOutClaim": False,
         "selectionAllowed": False,
         "derivedViews": args.derived_views,

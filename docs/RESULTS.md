@@ -108,6 +108,21 @@ the [full OCR ablation](OCR_ABLATION.md) for per-step accuracy, coverage,
 refusal and latency results. Because the suite was already consumed, these
 experiments identify regression candidates but do not establish a fresh gain.
 
+All frozen variants were subsequently rerun on external v3 and aggregated with
+v2, for 139 readable images plus the same 25 v2 negative cases. The current
+staged policy was exact on 38/139. The strongest post-hoc Hearth variant,
+normalization plus rectification, reached 45/139 and recovered seven cases with
+no exact regressions relative to the current policy. It produced 35 exact
+candidates out of 38 (92.1% precision at 27.3% coverage) with median/p95 local
+latency of 767/2,162 ms. Selection on this consumed benchmark means it still
+needs a new untouched test.
+
+Across the same 139 readable images, Gemini was exact on 125 and ML Kit's raw
+pass on one; the other eight ML Kit variants were exact on none. All 45 exact
+results from the strongest Hearth variant were also Gemini successes. Gemini
+alone was exact on 80, and both missed 14. See the combined table in
+[Hearth versus Gemini 2.5 Flash](GEMINI_COMPARISON.md).
+
 Android browser inference and offline replay worked on a Galaxy A52. Warm OCR
 was approximately 0.84 seconds on repeated development samples. Live Android
 tests and a conservative portrait crop fallback demonstrated feasibility but

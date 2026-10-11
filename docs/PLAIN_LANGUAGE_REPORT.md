@@ -272,6 +272,15 @@ tradeoff. The 39 cases are now a consumed regression set, and they contain no
 negative images for testing refusal safety. Full construction and results are
 in [external test v3](EXTERNAL_TEST_V3.md).
 
+After both sets had already been examined, every experimental variant was run
+across all 139 readable photos. The current retry pipeline read 38 correctly.
+The strongest experimental combination, which adds both lighting normalization
+and display straightening, read 45 correctly. It did not lose any of the 38
+current successes, but typically took about three times as long. Gemini read
+125/139 correctly. The simplest ML Kit pass read one correctly, while its eight
+other tested variants read none completely correctly. These combined numbers
+help choose the next experiment; they are not a new independent test.
+
 The larger test gives a more realistic and less flattering picture than the
 small pilot or validation results:
 
@@ -307,7 +316,8 @@ Important limitations remain:
 
 ## How the test data will be used
 
-The 125 cases are now permanently marked **test only**. They may be used to:
+All 164 benchmark cases—139 readable and 25 negative—are now permanently marked
+**test only**. They may be used to:
 
 - detect whether a future code or model change makes performance better or
   worse;

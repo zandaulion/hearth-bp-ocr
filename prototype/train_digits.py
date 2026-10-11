@@ -21,6 +21,64 @@ from prototype.digit_model import DigitNet,digit_tensor
 from prototype.reading import CLASS_NAMES
 
 
+SEGMENTS = {
+    0: "abcdef",
+    1: "bc",
+    2: "abdeg",
+    3: "abcdg",
+    4: "bcfg",
+    5: "acdfg",
+    6: "acdefg",
+    7: "abc",
+    8: "abcdefg",
+    9: "abcdfg",
+}
+SEGMENT_LINES = {
+    "a": ((8, 5), (24, 5)),
+    "b": ((26, 7), (25, 22)),
+    "c": ((25, 26), (24, 41)),
+    "d": ((8, 43), (23, 43)),
+    "e": ((6, 26), (6, 41)),
+    "f": ((7, 7), (7, 22)),
+    "g": ((8, 24), (24, 24)),
+}
+
+
+def synthetic_digits(count_per_digit):
+    """Generate varied seven-segment LCD crops without using evaluation images."""
+    crops, labels = [], []
+    for digit in range(10):
+        active_segments = set(SEGMENTS[digit])
+        for _ in range(count_per_digit):
+            inverted = np.random.random() < .12
+            base = np.random.uniform(25, 90) if inverted else np.random.uniform(155, 235)
+            active = np.random.uniform(175, 250) if inverted else np.random.uniform(5, 75)
+            ghost = base + (active - base) * np.random.uniform(.03, .14)
+            yy, xx = np.mgrid[:48, :32]
+            gradient = np.random.uniform(-18, 18) * (xx / 31 - .5)
+            gradient += np.random.uniform(-14, 14) * (yy / 47 - .5)
+            gray = np.clip(base + gradient, 0, 255).astype(np.uint8)
+            thickness = int(np.random.randint(2, 6))
+            for name, (start, end) in SEGMENT_LINES.items():
+                color = active if name in active_segments else ghost
+                cv2.line(gray, start, end, float(color), thickness, cv2.LINE_AA)
+            if np.random.random() < .35:
+                glare_x = np.random.randint(2, 30)
+                overlay = np.zeros_like(gray, dtype=np.float32)
+                overlay[:, max(0, glare_x - 2):min(32, glare_x + 3)] = np.random.uniform(8, 28)
+                gray = np.clip(gray.astype(np.float32) + overlay, 0, 255).astype(np.uint8)
+            if np.random.random() < .3:
+                gray = cv2.GaussianBlur(gray, (3, 3), np.random.uniform(.25, .9))
+            gray = np.clip(
+                gray.astype(np.float32) + np.random.normal(0, np.random.uniform(0, 4), gray.shape),
+                0,
+                255,
+            ).astype(np.uint8)
+            crops.append(gray)
+            labels.append(digit)
+    return crops, np.asarray(labels, dtype=int)
+
+
 def load(split,clean_only=False):
     selected=None
     if clean_only:
@@ -71,7 +129,7 @@ def phone_crops():
             if name=="row":continue
             crop=image[max(0,int((cy-bh/2)*h)):min(h,int(np.ceil((cy+bh/2)*h))),max(0,int((cx-bw/2)*w)):min(w,int(np.ceil((cx+bw/2)*w)))]
             crops.append(cv2.cvtColor(crop,cv2.COLOR_BGR2GRAY));labels.append(int(name))
-    return crops,np.asarray(labels)
+    return crops,np.asarray(labels,dtype=int)
 
 
 def main():
@@ -79,6 +137,7 @@ def main():
     parser.add_argument("--device",default="auto",help="auto, cpu, or a CUDA device such as 0")
     parser.add_argument("--initial-weights",type=Path);parser.add_argument("--output-dir",type=Path,default=ROOT / "prototype/models")
     parser.add_argument("--web-dir",type=Path,default=ROOT / "prototype/web/models")
+    parser.add_argument("--synthetic-positive-count-per-digit",type=int,default=0)
     args=parser.parse_args()
     requested="cuda:0" if args.device=="auto" and torch.cuda.is_available() else ("cpu" if args.device=="auto" else args.device)
     if requested.isdigit():requested=f"cuda:{requested}"
@@ -88,8 +147,12 @@ def main():
     torch.set_num_threads(2);torch.manual_seed(20261006);np.random.seed(20261006);random.seed(20261006)
     train,labels,_=load("train",True);val,vlabels,meta=load("valid")
     n_original=len(train);phone,plabels=phone_crops() if args.phone else ([],np.asarray([],dtype=int))
-    train+=phone;labels=np.concatenate((labels,plabels));n_real=len(train);bg=negatives();train+=bg;labels=np.concatenate((labels,np.full(len(bg),10)))
+    train+=phone;labels=np.concatenate((labels,plabels));n_real=len(train)
+    synthetic,synthetic_labels=synthetic_digits(args.synthetic_positive_count_per_digit)
+    train+=synthetic;labels=np.concatenate((labels,synthetic_labels));n_positive=len(train)
+    bg=negatives();train+=bg;labels=np.concatenate((labels,np.full(len(bg),10)))
     counts=np.bincount(labels,minlength=11);weights=1/counts[labels];weights[n_original:n_real]*=12
+    weights[n_real:n_positive]*=.35
     loader=DataLoader(Crops(train,labels,True),batch_size=96,sampler=WeightedRandomSampler(weights,2400,replacement=True),num_workers=0)
     vx=torch.stack([torch.from_numpy(digit_tensor(c)) for c in val]).to(device);vy=torch.from_numpy(vlabels).to(device)
     model=DigitNet().to(device)
@@ -114,7 +177,7 @@ def main():
     with torch.inference_mode():prob=model(vx).softmax(1).cpu().numpy();pred=prob.argmax(1)
     groups={}
     for target,p,m in zip(vlabels,pred,meta):groups.setdefault(m["file"],True);groups[m["file"]]&=bool(target==p)
-    report={"reader":"DigitNet crop recognition; annotated locations supplied", "training_images":239+(8 if phone else 0),"real_training_digits":n_real,"phone_training_digits":len(phone),"synthetic_background_crops":len(bg),"validation_digits":len(vlabels),"correct_digits":int((pred==vlabels).sum()),"all_digits_correct_images":sum(groups.values()),"validation_images":len(groups),"test_split_used":False,"errors":[{**m,"expected":int(t),"prediction":int(p),"score":float(prob[i,p])} for i,(t,p,m) in enumerate(zip(vlabels,pred,meta)) if t!=p]}
+    report={"reader":"DigitNet crop recognition; annotated locations supplied", "training_images":239+(8 if phone else 0),"real_training_digits":n_real,"phone_training_digits":len(phone),"synthetic_positive_crops":len(synthetic),"synthetic_positive_weight_multiplier":.35,"synthetic_background_crops":len(bg),"validation_digits":len(vlabels),"correct_digits":int((pred==vlabels).sum()),"all_digits_correct_images":sum(groups.values()),"validation_images":len(groups),"test_split_used":False,"errors":[{**m,"expected":int(t),"prediction":int(p),"score":float(prob[i,p])} for i,(t,p,m) in enumerate(zip(vlabels,pred,meta)) if t!=p]}
     (out / "digits_validation.json").write_text(json.dumps(report,indent=2))
     web=args.web_dir;web.mkdir(parents=True,exist_ok=True)
     model=model.cpu()
