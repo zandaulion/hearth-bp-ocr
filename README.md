@@ -25,6 +25,17 @@ See the [model card](docs/MODEL_CARD.md) for provenance, checksums and limitatio
 The user-supplied starter code, private photos, individual readings, screenshots,
 logs, machine connection settings and downloaded datasets remain excluded.
 
+
+## Start here
+
+[Run the browser prototype](#browser-setup) · [Integration guide](docs/INTEGRATION.md)
+· [API reference](docs/API_REFERENCE.md) · [Model card](docs/MODEL_CARD.md)
+· [Documentation index](docs/README.md)
+
+This is experimental OCR software, not a validated medical reader. The two reviewed
+ONNX models are bundled, while personal photos and local evaluation inputs are
+excluded. Start with bundled inference; training is a separate optional workflow.
+
 ## Browser setup
 
 For reuse in another project, start with the [integration guide](docs/INTEGRATION.md)
@@ -126,3 +137,12 @@ test-only and became a consumed regression set after its single frozen run.
 
 See [data licensing](docs/DATA_LICENSES.md), [publication policy](docs/PUBLICATION.md),
 and [third-party notices](prototype/THIRD_PARTY.md).
+
+
+## Support and contributions
+
+Use this repository’s Issues for reproducible bugs and focused feature requests. Include the version, relevant runtime/browser, expected behavior and a minimal synthetic example. Remove credentials, personal records, device identifiers and deployment-specific values before sharing logs or screenshots.
+
+Run the documented Python and JavaScript synthetic checks, plus `python tools/check_public_tree.py`, before publication. Never add scan photos, private ground truth or machine connection settings to a public change.
+
+Keep changes focused and update the affected documentation. Security-sensitive reports should follow [SECURITY.md](SECURITY.md).
