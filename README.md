@@ -32,6 +32,22 @@ logs, machine connection settings and downloaded datasets remain excluded.
 · [API reference](docs/API_REFERENCE.md) · [Model card](docs/MODEL_CARD.md)
 · [Documentation index](docs/README.md)
 
+## Downloadable preview
+
+The [v0.1.0 release](https://github.com/zandaulion/hearth-bp-ocr/releases/tag/v0.1.0)
+includes a ZIP with this source, the two reviewed models and the pinned ONNX
+Runtime Web files. After extracting it, run `python3 prototype/serve.py` from
+the extracted folder and open <http://127.0.0.1:8765/> in a current browser.
+No npm install, model training or account is needed for the preview. Python 3.12
+or newer is recommended. The local server listens on your own computer only;
+camera capture in a browser on another device needs a secure context. Check all
+three values against the monitor before using or copying a reading. This is
+experimental OCR, not a validated medical reader.
+
+For a source checkout instead of the release ZIP, follow the setup below to
+vendor ONNX Runtime Web yourself. The GitHub-generated source archives do not
+contain the ignored `prototype/web/vendor/` files.
+
 This is experimental OCR software, not a validated medical reader. The two reviewed
 ONNX models are bundled, while personal photos and local evaluation inputs are
 excluded. Start with bundled inference; training is a separate optional workflow.

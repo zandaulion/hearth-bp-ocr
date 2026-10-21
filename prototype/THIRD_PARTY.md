@@ -14,7 +14,8 @@ an ONNX export under AGPL-3.0-only, with its upstream metadata retained.
 Browser inference uses Microsoft ONNX Runtime Web 1.30.0, pinned in npm metadata.
 `npm run vendor` copies the runtime for local offline use and includes its
 [MIT license](https://github.com/microsoft/onnxruntime/blob/main/LICENSE) and notice.
-Generated runtime files are ignored by Git. Other dependencies retain their own
+The downloadable preview ZIP includes these copied files and their notices;
+generated runtime files are ignored by Git. Other dependencies retain their own
 licenses; see their package distributions.
 
 Public training labels come from Final Project's Blood Pressure Monitor Display,
