@@ -96,7 +96,6 @@ and predicted readings; do not confuse its behavior with the normal app.
 | `evaluation/contact_sheets.py` | Local image review sheets; consumes private/curated references. |
 | `download_roboflow_dataset.py` | Optional authenticated dataset downloader; not needed for inference. |
 | `tools/check_public_tree.py` | Checks staged/tracked blobs for excluded paths, sensitive text and approved model hashes. |
-| `skills/lenovo-android/` | Portable instructions, helper and tests for phones attached to an SSH host. |
 | `examples/` | Integration samples; not automatically loaded by the PWA. |
 
 ## Python/browser differences

@@ -12,7 +12,7 @@ import xml.etree.ElementTree as ET
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--host", default="lenovo")
+    parser.add_argument("--host", required=True, help="SSH host with ADB installed")
     parser.add_argument("--serial", required=True)
     parser.add_argument("action", choices=("snapshot", "tap-text", "open", "screenshot", "swipe", "key"))
     parser.add_argument("value", nargs="?")

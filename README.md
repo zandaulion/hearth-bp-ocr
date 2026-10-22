@@ -78,8 +78,8 @@ python prototype/serve.py
 ```
 
 Open <http://127.0.0.1:8765/> after installing and vendoring the browser runtime.
-Camera capture needs a secure context. For Android, use HTTPS or the localhost
-tunnel described by the [phone skill](skills/lenovo-android/SKILL.md).
+Camera capture needs a secure context. For Android, use HTTPS or a localhost
+tunnel such as `adb reverse tcp:8765 tcp:8765`.
 After a successful complete load, the service worker caches the static app and
 models. Normal user photos stay in memory and are not uploaded or persisted.
 The separate development harness records metrics when explicitly run.
@@ -129,10 +129,9 @@ python tools/check_public_tree.py
 
 The Python checks need the listed Python dependencies; JavaScript reading and
 crop-fallback tests need Node.js only. Tests use synthetic readings.
-The [Lenovo Android skill](skills/lenovo-android/SKILL.md) provides fresh ADB
-discovery, named phone selection, screenshots, UI snapshots, and SSH tunnels.
-Configure your own trusted SSH connection; no host address or credentials are
-included. Its helper needs Python 3 and OpenSSH locally, and ADB on the SSH host.
+`prototype/android_device.py` drives a phone attached to an SSH host you name
+with `--host`, using an explicit ADB serial. It needs OpenSSH locally and ADB on
+that host; no host address or credentials are included.
 
 For the optional Android timing harness, provide consented local images and
 `prototype/web/samples/test-manifest.json`, an array of objects with `file`,

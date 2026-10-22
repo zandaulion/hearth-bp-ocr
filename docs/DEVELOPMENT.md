@@ -151,10 +151,10 @@ read six times provides latency observations, not six independent accuracy tests
 
 ## Android development tools
 
-Use the [Android skill](../skills/lenovo-android/SKILL.md) for trusted SSH setup,
-fresh device discovery, named selection and app/CDP tunnels. Supply your own
-connection configuration. Do not reuse a stale wireless serial or silently
-substitute a different phone.
+Use `prototype/android_device.py --host <ssh-host> --serial <adb-serial>` for
+snapshots, taps and screenshots on a phone attached to a trusted SSH host. Supply
+your own connection configuration. Do not reuse a stale wireless serial or
+silently substitute a different phone.
 
 `android_browser.mjs` requires a Node runtime with global `WebSocket` (the
 development environment used Node 24), a loopback CDP tunnel and exactly one
