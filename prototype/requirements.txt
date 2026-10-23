@@ -2,7 +2,7 @@
 # Install torch/torchvision CPU wheels first; see README.md.
 numpy==2.5.4
 Pillow==12.3.0
-opencv-python==4.14.0.94
+opencv-python==5.0.0.93
 torch==2.14.1
 torchvision==0.29.1
 ultralytics==8.4.183
